@@ -7,6 +7,7 @@ import numpy as np
 import yaml
 import os
 
+# Assuming your data folder is now correctly recognized inside the root
 from src.data.coreset_dataset import CoreSetGCN_Dataset
 from src.models.stgcn_multitask import CoreSetSTGCN_MultiTask
 from src.utils.metrics import CoreSetEvaluator
@@ -21,109 +22,84 @@ def train_stgcn_model(config_path):
     
     print("🚀 Initiating CoreSet ST-GCN Training (Subject-Wise Split)...")
     
-    # --- HARDWARE DETECTION ---
-    if torch.cuda.is_available():
-        device = torch.device("cuda") 
-    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        device = torch.device("mps")  
-    else:
-        device = torch.device("cpu")  
-    print(f"   🖥️  Hardware Accelerated via: {device.type.upper()}")
-    # --------------------------
+    full_dataset = CoreSetGCN_Dataset(data_dir=config['data_dir'], max_frames=config['max_frames'])
+    total_files = len(full_dataset)
+    print(f"   Found {total_files} total files in {config['data_dir']}.")
 
-    full_train_dataset = CoreSetGCN_Dataset(data_dir=config['data_dir'], max_frames=config['max_frames'], augment=True)
-    full_eval_dataset = CoreSetGCN_Dataset(data_dir=config['data_dir'], max_frames=config['max_frames'], augment=False)
-    total_files = len(full_train_dataset)
-    
-    print(f"    Found {total_files} total files in {config['data_dir']}:")
-    for exercise, count in full_train_dataset.class_counts.items():
-        clean_name = exercise.replace('_', ' ').title()
-        print(f"        {clean_name}: {count} videos")
-    print(f"   ----------------------------------------")
-
-    subject_ids = full_train_dataset.get_subject_ids() 
+    # --- SUBJECT-WISE SPLIT LOGIC ---
+    subject_ids = full_dataset.get_subject_ids() 
     indices = np.arange(total_files)
 
+    # 1. First Split: Isolate 70% of subjects for Training, 30% for Val/Test
     gss_train = GroupShuffleSplit(n_splits=1, train_size=0.70, random_state=42)
     train_idx, val_test_idx = next(gss_train.split(indices, groups=subject_ids))
 
+    # 2. Second Split: Divide the remaining 30% of subjects equally (50/50) into Validation and Testing
     val_test_subjects = np.array(subject_ids)[val_test_idx]
     gss_val_test = GroupShuffleSplit(n_splits=1, train_size=0.50, random_state=42)
     
     val_relative_idx, test_relative_idx = next(gss_val_test.split(val_test_idx, groups=val_test_subjects))
 
+    # Map back to absolute original indices
     val_idx = val_test_idx[val_relative_idx]
     test_idx = val_test_idx[test_relative_idx]
 
-    train_dataset = Subset(full_train_dataset, train_idx)
-    val_dataset = Subset(full_eval_dataset, val_idx)
-    test_dataset = Subset(full_eval_dataset, test_idx)
+    # Create PyTorch Subsets
+    train_dataset = Subset(full_dataset, train_idx)
+    val_dataset = Subset(full_dataset, val_idx)
+    test_dataset = Subset(full_dataset, test_idx)
 
     print(f"   Partitioned (Subject-Isolated): {len(train_dataset)} Train | {len(val_dataset)} Val | {len(test_dataset)} Test")
+    # --------------------------------
 
-    train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False, num_workers=0)
+    train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False, num_workers=4)
     
     model = CoreSetSTGCN_MultiTask(
         num_classes=config['num_classes'], 
         max_frames=config['max_frames'], 
         node_count=config['node_count']
-    ).to(device)
+    ).cuda()
     
     optimizer = optim.AdamW(model.parameters(), lr=config['learning_rate'], weight_decay=config['weight_decay'])
-    
-    # --- DUAL HEAD LOSS FUNCTIONS ---
     loss_classification = nn.CrossEntropyLoss()
-    loss_density = nn.MSELoss() 
-    
-    # Weighting Coefficients defined in Methodology
-    lambda_1 = 1.0 # Classification Priority
-    lambda_2 = 0.5 # Density priority
-    # --------------------------------
     
     evaluator = CoreSetEvaluator()
     best_val_accuracy = 0.0
 
     for epoch in range(config['epochs']):
+        # --- TRAINING PHASE ---
         model.train()
         total_train_loss = 0.0
         
-        # Unpacking 3 variables now!
-        for inputs, labels, density_gts in train_loader:
-            inputs, labels, density_gts = inputs.to(device), labels.to(device), density_gts.to(device)
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.cuda(), labels.cuda()
             
             optimizer.zero_grad()
             logits, density_maps = model(inputs)
             
-            # --- THE MULTI-TASK LOSS EQUATION ---
-            l_cls = loss_classification(logits, labels)
-            l_density = loss_density(density_maps, density_gts)
-            
-            # L_total = λ₁ · L_cls + λ₂ · L_density
-            loss = (lambda_1 * l_cls) + (lambda_2 * l_density)
-            # ------------------------------------
-            
+            loss = loss_classification(logits, labels)
             loss.backward()
             optimizer.step()
+            
             total_train_loss += loss.item()
             
         avg_train_loss = total_train_loss / len(train_loader)
 
+        # --- VALIDATION PHASE ---
         model.eval()
         total_val_loss = 0.0
         val_logits_list = []
         val_labels_list = []
         
         with torch.no_grad():
-            for inputs, labels, density_gts in val_loader:
-                inputs, labels, density_gts = inputs.to(device), labels.to(device), density_gts.to(device)
+            for inputs, labels in val_loader:
+                inputs, labels = inputs.cuda(), labels.cuda()
                 logits, density_maps = model(inputs)
                 
-                l_cls = loss_classification(logits, labels)
-                l_density = loss_density(density_maps, density_gts)
-                loss = (lambda_1 * l_cls) + (lambda_2 * l_density)
-                
+                loss = loss_classification(logits, labels)
                 total_val_loss += loss.item()
+                
                 val_logits_list.append(logits.cpu())
                 val_labels_list.append(labels.cpu())
                 
@@ -143,9 +119,9 @@ def train_stgcn_model(config_path):
             best_val_accuracy = val_accuracy
             save_path = os.path.join(config['checkpoint_dir'], 'best_stgcn_model.pth')
             torch.save(model.state_dict(), save_path)
-            print(f"    New best model saved! (Accuracy: {best_val_accuracy * 100:.2f}%)")
+            print(f"   🌟 New best model saved! (Accuracy: {best_val_accuracy * 100:.2f}%)")
 
-    print(f"\n Training Complete. Best model saved to {config['checkpoint_dir']}/best_stgcn_model.pth")
+    print(f"\n✅ Training Complete. Best model saved to {config['checkpoint_dir']}/best_stgcn_model.pth")
 
 if __name__ == '__main__':
     train_stgcn_model('configs/stgcn_config.yaml')

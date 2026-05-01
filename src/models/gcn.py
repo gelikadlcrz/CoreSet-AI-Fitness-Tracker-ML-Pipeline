@@ -8,7 +8,6 @@ class SpatialGraphConvolution(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.register_buffer('adj', torch.from_numpy(norm_adj_matrix).float())
-        # FIX: Using PyTorch's optimized 1x1 Conv2D instead of fragile manual weight parameters
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
 
     def forward(self, x):
@@ -22,7 +21,6 @@ class SpatialGraphConvolution(nn.Module):
         x_transformed = self.conv(x_reshaped) # (b*m, out_c, t, v)
         
         # 2. Graph Aggregation (A * X)
-        # matmul automatically broadcasts over the batch and time dimensions safely
         output = torch.matmul(x_transformed, self.adj)
         
         # Safely unfold the Persons dimension back out
@@ -42,13 +40,11 @@ class TemporalConvolution(nn.Module):
     def forward(self, x):
         b, c, t, v, m = x.size()
         
-        # Safe memory folding
         x_safe = x.permute(0, 4, 1, 2, 3).contiguous()
         x_reshaped = x_safe.view(b * m, c, t, v) 
         
         output = self.t_conv(x_reshaped) 
         
-        # Safe memory unfolding
         output = output.view(b, m, output.size(1), output.size(2), output.size(3))
         output = output.permute(0, 2, 3, 4, 1).contiguous() 
         return output
@@ -78,13 +74,11 @@ class ST_GCN_Block(nn.Module):
         if self.residual is not None:
             b, c, t, v, m = res_connection.size()
             
-            # Safe folding for residual link
             res_safe = res_connection.permute(0, 4, 1, 2, 3).contiguous()
             res_reshaped = res_safe.view(b * m, c, t, v)
             
             res_output = self.residual(res_reshaped) 
             
-            # Safe unfolding for residual link
             res_output = res_output.view(b, m, res_output.size(1), res_output.size(2), res_output.size(3))
             res_output = res_output.permute(0, 2, 3, 4, 1).contiguous()
             
