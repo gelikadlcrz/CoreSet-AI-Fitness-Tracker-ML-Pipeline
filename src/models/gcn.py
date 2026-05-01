@@ -8,34 +8,26 @@ class SpatialGraphConvolution(nn.Module):
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.register_buffer('adj', torch.from_numpy(norm_adj_matrix).float())
-        self.weight = nn.Parameter(torch.Tensor(in_channels, out_channels))
-        
-        if bias:
-            self.bias = nn.Parameter(torch.Tensor(out_channels))
-        else:
-            self.register_parameter('bias', None)
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        nn.init.kaiming_uniform_(self.weight, a=np.sqrt(5))
-        if self.bias is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
-            bound = 1 / np.sqrt(fan_in)
-            nn.init.uniform_(self.bias, -bound, bound)
+        # FIX: Using PyTorch's optimized 1x1 Conv2D instead of fragile manual weight parameters
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=bias)
 
     def forward(self, x):
         b, c, t, v, m = x.size()
-        x_reshaped = x.permute(0, 2, 3, 4, 1).contiguous() 
-        x_reshaped = x_reshaped.view(b * t * m, v, c) 
         
-        support = torch.matmul(x_reshaped, self.adj) 
-        output = torch.matmul(support, self.weight) 
+        # Safely fold the Persons (m) dimension into the Batch (b) dimension
+        x_safe = x.permute(0, 4, 1, 2, 3).contiguous() # (b, m, c, t, v)
+        x_reshaped = x_safe.view(b * m, c, t, v)
         
-        if self.bias is not None:
-            output += self.bias
-            
-        output = output.view(b, t, m, v, self.out_channels)
-        output = output.permute(0, 4, 1, 3, 2).contiguous() 
+        # 1. Feature Transformation (X * W)
+        x_transformed = self.conv(x_reshaped) # (b*m, out_c, t, v)
+        
+        # 2. Graph Aggregation (A * X)
+        # matmul automatically broadcasts over the batch and time dimensions safely
+        output = torch.matmul(x_transformed, self.adj)
+        
+        # Safely unfold the Persons dimension back out
+        output = output.view(b, m, self.out_channels, t, v)
+        output = output.permute(0, 2, 3, 4, 1).contiguous() # (b, out_c, t, v, m)
         return output
 
 class TemporalConvolution(nn.Module):
@@ -49,8 +41,14 @@ class TemporalConvolution(nn.Module):
 
     def forward(self, x):
         b, c, t, v, m = x.size()
-        x_reshaped = x.view(b * m, c, t, v) 
+        
+        # Safe memory folding
+        x_safe = x.permute(0, 4, 1, 2, 3).contiguous()
+        x_reshaped = x_safe.view(b * m, c, t, v) 
+        
         output = self.t_conv(x_reshaped) 
+        
+        # Safe memory unfolding
         output = output.view(b, m, output.size(1), output.size(2), output.size(3))
         output = output.permute(0, 2, 3, 4, 1).contiguous() 
         return output
@@ -78,8 +76,18 @@ class ST_GCN_Block(nn.Module):
         x = self.relu(self.t_conv(x))
         
         if self.residual is not None:
-            b, c, t, v, m = x.size()
-            x_res = res_connection.view(b * m, c, t, v)
-            output = self.residual(x_res) 
-            x = x + output.view(b, m, x.size(1), x.size(2), x.size(3)).permute(0, 2, 3, 4, 1)
+            b, c, t, v, m = res_connection.size()
+            
+            # Safe folding for residual link
+            res_safe = res_connection.permute(0, 4, 1, 2, 3).contiguous()
+            res_reshaped = res_safe.view(b * m, c, t, v)
+            
+            res_output = self.residual(res_reshaped) 
+            
+            # Safe unfolding for residual link
+            res_output = res_output.view(b, m, res_output.size(1), res_output.size(2), res_output.size(3))
+            res_output = res_output.permute(0, 2, 3, 4, 1).contiguous()
+            
+            x = x + res_output
+            
         return self.relu(x)

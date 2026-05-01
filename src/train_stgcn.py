@@ -18,9 +18,29 @@ def train_stgcn_model(config_path):
     
     print("🚀 Initiating CoreSet ST-GCN Training (Randomized Split)...")
     
+    # --- HARDWARE DETECTION (Crucial for MacBooks) ---
+    if torch.cuda.is_available():
+        device = torch.device("cuda") # For NVIDIA GPUs
+    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        device = torch.device("mps")  # For Apple Silicon (M1/M2/M3)
+    else:
+        device = torch.device("cpu")  # Fallback
+    print(f"   🖥️  Hardware Accelerated via: {device.type.upper()}")
+    # -------------------------------------------------
+
     full_dataset = CoreSetGCN_Dataset(data_dir=config['data_dir'], max_frames=config['max_frames'])
     total_files = len(full_dataset)
-    print(f"   Found {total_files} total files in {config['data_dir']}.")
+    print(f"    Found {total_files} total files in {config['data_dir']}:")
+    for exercise, count in full_dataset.class_counts.items():
+        # Clean up the folder names for printing (e.g., 'bench_press' -> 'Bench Press')
+        clean_name = exercise.replace('_', ' ').title()
+        print(f"        {clean_name}: {count} videos")
+    print(f"   ----------------------------------------")
+    # -----------------------------------
+
+    train_size = int(0.70 * total_files)
+    val_size = int(0.15 * total_files)
+    test_size = total_files - train_size - val_size
 
     train_size = int(0.70 * total_files)
     val_size = int(0.15 * total_files)
@@ -33,14 +53,15 @@ def train_stgcn_model(config_path):
     
     print(f"   Partitioned: {train_size} Train | {val_size} Val | {test_size} Test")
 
-    train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True, num_workers=0) # Changed num_workers=0 for Mac stability
+    val_loader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=False, num_workers=0)
     
+    # Send model to the detected device (MPS or CUDA)
     model = CoreSetSTGCN_MultiTask(
         num_classes=config['num_classes'], 
         max_frames=config['max_frames'], 
         node_count=config['node_count']
-    ).cuda()
+    ).to(device)
     
     optimizer = optim.AdamW(model.parameters(), lr=config['learning_rate'], weight_decay=config['weight_decay'])
     loss_classification = nn.CrossEntropyLoss()
@@ -54,7 +75,8 @@ def train_stgcn_model(config_path):
         total_train_loss = 0.0
         
         for inputs, labels in train_loader:
-            inputs, labels = inputs.cuda(), labels.cuda()
+            # Send data to the detected device
+            inputs, labels = inputs.to(device), labels.to(device)
             
             optimizer.zero_grad()
             logits, density_maps = model(inputs)
@@ -75,7 +97,8 @@ def train_stgcn_model(config_path):
         
         with torch.no_grad():
             for inputs, labels in val_loader:
-                inputs, labels = inputs.cuda(), labels.cuda()
+                # Send data to the detected device
+                inputs, labels = inputs.to(device), labels.to(device)
                 logits, density_maps = model(inputs)
                 
                 loss = loss_classification(logits, labels)
@@ -100,9 +123,8 @@ def train_stgcn_model(config_path):
             best_val_accuracy = val_accuracy
             save_path = os.path.join(config['checkpoint_dir'], 'best_stgcn_model.pth')
             torch.save(model.state_dict(), save_path)
-            print(f"   🌟 New best model saved! (Accuracy: {best_val_accuracy * 100:.2f}%)")
+            print(f"    New best model saved! (Accuracy: {best_val_accuracy * 100:.2f}%)")
 
-    print(f"\n✅ Training Complete. Best model saved to {config['checkpoint_dir']}/best_stgcn_model.pth")
-
+    print(f"\n Training Complete. Best model saved to {config['checkpoint_dir']}/best_stgcn_model.pth")
 if __name__ == '__main__':
-    train_stgcn_model('../configs/stgcn_config.yaml')
+    train_stgcn_model('configs/stgcn_config.yaml')
