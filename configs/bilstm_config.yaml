@@ -1,0 +1,19 @@
+# Data Paths
+data_dir: "data/flattened_tensors"
+checkpoint_dir: "saved_models"
+
+# Model Hyperparameters
+input_size: 132  # 33 landmarks * 4 (x, y, z, visibility)
+num_classes: 4   # bench_press, pull_up, push_up, squat
+hidden_size: 128 # Standard for skeletal BiLSTMs
+num_layers: 2    # Stacked layers help capture complex motion patterns
+
+# Optimized Training Hyperparameters
+batch_size: 16
+epochs: 100
+
+# Optimization & Regularization
+learning_rate: 0.0005  # Reduced from 0.001 to prevent the "accuracy swings" you saw
+weight_decay: 0.001    # Increased slightly to penalize overfitting
+patience_lr: 10        # Number of epochs to wait before dropping LR
+patience_early_stop: 20 # Increased patience to 20 so the model has room to recover
