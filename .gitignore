@@ -12,3 +12,8 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# Machine Learning Data & Models
+checkpoint/
+*.pth
+*.tflite
