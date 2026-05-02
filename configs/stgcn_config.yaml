@@ -1,9 +1,20 @@
-data_dir: "data/interpolated_json"
-checkpoint_dir: "checkpoint"
-max_frames: 150
-batch_size: 32
-learning_rate: 0.001
-weight_decay: 0.0001
-epochs: 30
-num_classes: 4
-node_count: 33
+# CoreSet ST-GCN — Training Configuration
+#
+# in_channels is set to 14 (ANGLE_FEATURE_DIM) because node features are
+# relative joint angles (one per anatomical triplet), not raw XYZ coordinates.
+# If your extraction notebook stores raw xyz in the JSON, set this to 3.
+
+data_dir:        "data/interpolated_json"
+checkpoint_dir:  "checkpoint"
+
+# Model
+in_channels:  14          # ANGLE_FEATURE_DIM — joint angle features per node
+num_classes:  4           # squat, push_up, bench_press, pull_up
+node_count:   33          # BlazePose 33-landmark skeleton
+max_frames:   150         # temporal window after padding / truncation
+
+# Training
+batch_size:      32
+learning_rate:   0.001    # initial LR; decayed by ReduceLROnPlateau
+weight_decay:    0.0001   # L2 regularisation (AdamW)
+epochs:          100      # maximum; early stopping at patience=15
