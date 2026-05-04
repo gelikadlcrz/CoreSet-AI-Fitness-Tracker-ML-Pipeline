@@ -40,6 +40,51 @@ The MSE loss on an all-zero GT is still informative because the model is
 penalised for false positives.
 """
 
+# UPDATE
+
+"""
+INPUT (what the model sees)
+---------------------------
+- We use pose JSON files (body landmarks per frame)
+- From these, joing angles are computed (elbow, knee, etc.)
+- These angles are used as features for the ST-GCN model
+
+GROUND TRUTH (what the model learns)
+------------------------------------
+- Our labeled_json files contain:
+    "time_points": [start1, end1, start2, end2, ...]
+
+- Each pair represents one repetition (start → end)
+
+- These are converted into a density map:
+    - each rep becomes a smooth curve (Gaussian)
+    - center = middle of the rep
+    - width = duration of the rep
+
+IMPORTANT DIFFERENCE
+--------------------
+- Original version uses: rep_frames (single points)
+- The updated version uses: time_points (start–end pairs, following Hu et al. style)
+
+PIPELINE SUMMARY
+----------------
+labeled_json (frames + time_points)
+        ↓
+joint angle computation
+        ↓
+temporal sampling (fixed length)
+        ↓
+time_points → density map
+        ↓
+model training
+
+NOTES
+-----
+- We currently use only original (non-augmented) files
+- Augmented files are excluded to avoid label misalignment
+- Density map is generated inside this dataset
+"""
+
 
 import json
 import math
@@ -252,8 +297,22 @@ class CoreSetGCN_Dataset(Dataset):
                continue
                
            if lm:
-               arr = np.array(lm, dtype=np.float32)
-               coords_seq[t_idx] = arr[:33, :3]
+            coords = []
+
+            for point in lm[:33]:
+                if isinstance(point, dict):
+                    coords.append([
+                        point.get("x", 0.0),
+                        point.get("y", 0.0),
+                        point.get("z", 0.0)
+                    ])
+                else:
+                    coords.append(point[:3])
+
+            arr = np.array(coords, dtype=np.float32)
+
+            if arr.shape == (33, 3):
+                coords_seq[t_idx] = arr
 
 
        # --- Augmentation on raw coordinates (before angle computation) ---
@@ -296,35 +355,84 @@ class CoreSetGCN_Dataset(Dataset):
 
 
    def _get_ground_truth_density_map(self, filepath: Path, actual_frames: int) -> torch.Tensor:
-       density_gt = np.zeros(self.max_frames, dtype=np.float32)
+        """
+        Build density map from time_points (similar to Hu et al's study).
 
+        Expected JSON format: "time_points": [start1, end1, start2, end2, ...]
 
-       with open(filepath, 'r') as f:
-           data = json.load(f)
+        Each start-end pair becomes a Gaussian-like bump.
+        The final density map length matches self.max_frames.
+        """
 
+        density_gt = np.zeros(self.max_frames, dtype=np.float32)
 
-       # Safe extraction in case JSON is a raw list without 'rep_frames'
-       if isinstance(data, dict):
-           rep_frames = data.get('rep_frames', [])
-       else:
-           rep_frames = []
+        with open(filepath, 'r') as f:
+            data = json.load(f)
 
+        if not isinstance(data, dict):
+            return torch.from_numpy(density_gt)
 
-       if rep_frames and actual_frames > 0:
-           for frame_idx in rep_frames:
-               frame_idx = int(frame_idx)
-               if actual_frames >= self.max_frames:
-                   mapped = int((frame_idx / actual_frames) * self.max_frames)
-               else:
-                   mapped = frame_idx
+        time_points = data.get("time_points", [])
 
+        # fallback for old format (rep_frames)
+        rep_frames = data.get("rep_frames", [])
 
-               mapped = max(0, min(mapped, self.max_frames - 1))
-               density_gt[mapped] = 1.0
+        if time_points and actual_frames > 0:
+            mapped_points = []
 
+            for point in time_points:
+                point = int(point)
 
-       return torch.from_numpy(density_gt)
+                if actual_frames >= self.max_frames:
+                    mapped = int((point / actual_frames) * self.max_frames)
+                else:
+                    mapped = point
 
+                mapped = max(0, min(mapped, self.max_frames - 1))
+                mapped_points.append(mapped)
+
+            mapped_points = sorted(mapped_points)
+
+            # Should be start-end pairs
+            for i in range(0, len(mapped_points) - 1, 2):
+                start = mapped_points[i]
+                end = mapped_points[i + 1]
+
+                if end < start:
+                    start, end = end, start
+
+                if end == start:
+                    density_gt[start] = 1.0
+                    continue
+
+                center = (start + end) / 2.0
+                sigma = max((end - start) / 6.0, 1e-6)
+
+                for t in range(start, end + 1):
+                    density_gt[t] += np.exp(-((t - center) ** 2) / (2 * sigma ** 2))
+
+            # Normalize so sum approximately equals rep count
+            total = density_gt.sum()
+            rep_count = len(mapped_points) // 2
+
+            if total > 0:
+                density_gt = density_gt / total * rep_count
+
+        elif rep_frames and actual_frames > 0:
+            # old one-hot fallback
+            for frame_idx in rep_frames:
+                frame_idx = int(frame_idx)
+
+                if actual_frames >= self.max_frames:
+                    mapped = int((frame_idx / actual_frames) * self.max_frames)
+                else:
+                    mapped = frame_idx
+
+                mapped = max(0, min(mapped, self.max_frames - 1))
+                density_gt[mapped] = 1.0
+
+        return torch.from_numpy(density_gt)
+   
 
    # ------------------------------------------------------------------
    # __getitem__
