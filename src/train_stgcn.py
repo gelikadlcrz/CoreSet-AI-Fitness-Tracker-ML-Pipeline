@@ -22,7 +22,7 @@ Implements the full training protocol described in the methodology:
                     where λ₁ = 1.0 (CrossEntropyLoss) and
                           λ₂ = 0.5 (MSELoss), per the methodology.
 
-  Partitioning    : Subject-wise GroupShuffleSplit (70 / 15 / 15).
+  Partitioning    : Subject-wise Split via centralized configs/data_splits.json (70 / 15 / 15).
 
   Dropout         : 0.5 before classification head, 0.3 before density head.
 
@@ -33,13 +33,11 @@ Implements the full training protocol described in the methodology:
 
 import os
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import yaml
-from sklearn.model_selection import GroupShuffleSplit
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 
 from src.data.coreset_dataset import CoreSetGCN_Dataset, ANGLE_FEATURE_DIM
 from src.models.stgcn_multitask import CoreSetSTGCN_MultiTask
@@ -63,7 +61,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     config = load_config(config_path)
     os.makedirs(config['checkpoint_dir'], exist_ok=True)
 
-    print("CoreSet ST-GCN — Training (Subject-Wise Split)")
+    print("CoreSet ST-GCN — Training (Centralized Subject-Wise Split)")
     print("=" * 60)
 
     # ------------------------------------------------------------------ #
@@ -78,55 +76,39 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     print(f"  Hardware: {device.type.upper()}")
 
     # ------------------------------------------------------------------ #
-    #  Dataset — augmented for training, clean for val/test               #
+    #  Dataset Initialization (Using Centralized data_splits.json)         #
     # ------------------------------------------------------------------ #
-    full_train_dataset = CoreSetGCN_Dataset(
+    split_file_path = os.path.join('configs', 'data_splits.json')
+    
+    train_dataset = CoreSetGCN_Dataset(
         data_dir=config['data_dir'],
+        split_file=split_file_path,
+        split_type='train',
         max_frames=config['max_frames'],
         augment=True
     )
-    full_eval_dataset = CoreSetGCN_Dataset(
+    
+    val_dataset = CoreSetGCN_Dataset(
         data_dir=config['data_dir'],
+        split_file=split_file_path,
+        split_type='val',
+        max_frames=config['max_frames'],
+        augment=False
+    )
+    
+    test_dataset = CoreSetGCN_Dataset(
+        data_dir=config['data_dir'],
+        split_file=split_file_path,
+        split_type='test',
         max_frames=config['max_frames'],
         augment=False
     )
 
-    total_files = len(full_train_dataset)
-    print(f"  Total files in {config['data_dir']}: {total_files}")
-    for exercise, count in full_train_dataset.class_counts.items():
-        print(f"    {exercise.replace('_', ' ').title()}: {count}")
-    print("-" * 60)
-
-    # ------------------------------------------------------------------ #
-    #  Subject-wise partitioning (70 / 15 / 15)                           #
-    #  GroupShuffleSplit ensures no subject appears in multiple splits.   #
-    # ------------------------------------------------------------------ #
-    subject_ids = full_train_dataset.get_subject_ids()
-    indices = np.arange(total_files)
-
-    gss_main = GroupShuffleSplit(n_splits=1, train_size=0.70, random_state=42)
-    train_idx, val_test_idx = next(
-        gss_main.split(indices, groups=subject_ids)
-    )
-
-    val_test_subjects = np.array(subject_ids)[val_test_idx]
-    gss_val_test = GroupShuffleSplit(
-        n_splits=1, train_size=0.50, random_state=42
-    )
-    val_rel_idx, test_rel_idx = next(
-        gss_val_test.split(val_test_idx, groups=val_test_subjects)
-    )
-    val_idx  = val_test_idx[val_rel_idx]
-    test_idx = val_test_idx[test_rel_idx]
-
-    train_dataset = Subset(full_train_dataset, train_idx)
-    val_dataset   = Subset(full_eval_dataset,  val_idx)
-    test_dataset  = Subset(full_eval_dataset,  test_idx)
-
-    print(f"  Partition (subject-isolated): "
+    print(f"  Partition (subject-isolated via data_splits.json): "
           f"{len(train_dataset)} train | "
           f"{len(val_dataset)} val | "
           f"{len(test_dataset)} test")
+    print("-" * 60)
 
     train_loader = DataLoader(
         train_dataset, batch_size=config['batch_size'],
@@ -281,7 +263,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
         scheduler.step(avg_val_loss)
         new_lr = optimizer.param_groups[0]['lr']
         if new_lr < prev_lr:
-            print(f"    LR reduced: {prev_lr:.2e} 2192 {new_lr:.2e}")
+            print(f"    LR reduced: {prev_lr:.2e} ➔ {new_lr:.2e}")
 
         # -------------------------------------------------------------- #
         #  Checkpoint — save best model by validation loss                 #
