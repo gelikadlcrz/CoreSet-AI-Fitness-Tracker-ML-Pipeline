@@ -355,83 +355,56 @@ class CoreSetGCN_Dataset(Dataset):
 
 
    def _get_ground_truth_density_map(self, filepath: Path, actual_frames: int) -> torch.Tensor:
-        """
-        Build density map from time_points (similar to Hu et al's study).
+    """
+    Build normalized density map from time_points.
 
-        Expected JSON format: "time_points": [start1, end1, start2, end2, ...]
+    Current labeled_json format:
+        "time_points": [peak1, peak2, peak3, ...]
+        "rep_count": number of detected repetitions
 
-        Each start-end pair becomes a Gaussian-like bump.
-        The final density map length matches self.max_frames.
-        """
+    Each time point represents one detected repetition peak/valley.
+    Each point becomes a normalized Gaussian bump.
+    The density map sum should be approximately equal to rep_count.
+    """
 
-        density_gt = np.zeros(self.max_frames, dtype=np.float32)
+    density_gt = np.zeros(self.max_frames, dtype=np.float32)
 
-        with open(filepath, 'r') as f:
-            data = json.load(f)
+    with open(filepath, "r") as f:
+        data = json.load(f)
 
-        if not isinstance(data, dict):
-            return torch.from_numpy(density_gt)
-
-        time_points = data.get("time_points", [])
-
-        # fallback for old format (rep_frames)
-        rep_frames = data.get("rep_frames", [])
-
-        if time_points and actual_frames > 0:
-            mapped_points = []
-
-            for point in time_points:
-                point = int(point)
-
-                if actual_frames >= self.max_frames:
-                    mapped = int((point / actual_frames) * self.max_frames)
-                else:
-                    mapped = point
-
-                mapped = max(0, min(mapped, self.max_frames - 1))
-                mapped_points.append(mapped)
-
-            mapped_points = sorted(mapped_points)
-
-            # Should be start-end pairs
-            for i in range(0, len(mapped_points) - 1, 2):
-                start = mapped_points[i]
-                end = mapped_points[i + 1]
-
-                if end < start:
-                    start, end = end, start
-
-                if end == start:
-                    density_gt[start] = 1.0
-                    continue
-
-                center = (start + end) / 2.0
-                sigma = max((end - start) / 6.0, 1e-6)
-
-                for t in range(start, end + 1):
-                    density_gt[t] += np.exp(-((t - center) ** 2) / (2 * sigma ** 2))
-
-            # Normalize so sum approximately equals rep count
-            total = density_gt.sum()
-            rep_count = len(mapped_points) // 2
-
-            if total > 0:
-                density_gt = density_gt / total * rep_count
-
-        elif rep_frames and actual_frames > 0:
-            # old one-hot fallback
-            for frame_idx in rep_frames:
-                frame_idx = int(frame_idx)
-
-                if actual_frames >= self.max_frames:
-                    mapped = int((frame_idx / actual_frames) * self.max_frames)
-                else:
-                    mapped = frame_idx
-
-                mapped = max(0, min(mapped, self.max_frames - 1))
-                density_gt[mapped] = 1.0
-
+    if not isinstance(data, dict):
         return torch.from_numpy(density_gt)
+
+    time_points = data.get("time_points", [])
+    rep_count = data.get("rep_count", len(time_points))
+
+    if not time_points or actual_frames <= 0:
+        return torch.from_numpy(density_gt)
+
+    sigma = 2.0
+
+    for point in time_points:
+        point = int(point)
+
+        if actual_frames >= self.max_frames:
+            mapped = int((point / actual_frames) * self.max_frames)
+        else:
+            mapped = point
+
+        mapped = max(0, min(mapped, self.max_frames - 1))
+
+        for t in range(self.max_frames):
+            density_gt[t] += (
+                np.exp(-((t - mapped) ** 2) / (2 * sigma ** 2))
+                / (sigma * np.sqrt(2 * np.pi))
+            )
+
+    total = density_gt.sum()
+
+    if total > 0:
+        density_gt = density_gt / total * rep_count
+
+    return torch.from_numpy(density_gt)
    
 
    # ------------------------------------------------------------------
