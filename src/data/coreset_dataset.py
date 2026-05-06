@@ -28,6 +28,29 @@ The JSON files are expected to contain a `time_points` key whose value is a
 list of integer frame indices at which a repetition *completes* (i.e. the
 peak or valley of the movement cycle, depending on annotation convention).
 Each point becomes a normalized Gaussian bump.
+
+Normalisation
+-------------
+FIX (Issue 4): Z-score normalisation has been removed from __getitem__.
+Statistics are computed in train_stgcn.py from the training partition ONLY
+and stored as tensors of shape (1, C, 1, 1, 1). They are applied in the
+training loop after the DataLoader has stacked samples into batches of shape
+(B, C, T, V, 1), where the broadcast axes are unambiguous.
+
+Applying a flat (C,) array inside __getitem__ against angle_seq of shape
+(T, C) would broadcast along the time axis instead of the channel axis,
+producing incorrect normalisation. The self.mean_std attribute is therefore
+deprecated and retained only for backward compatibility; it is never set or
+used in the current pipeline.
+
+Noise injection
+---------------
+FIX (Issue 5): Gaussian noise injection has been removed from __getitem__
+and moved to the training loop in train_stgcn.py, where it is applied AFTER
+Z-score normalisation. This ensures the perturbation magnitude (±0.05) is
+relative to one standardised unit — a controlled fraction of one standard
+deviation — rather than being proportional to the raw angle magnitude (which
+varies widely across different joint types, e.g. 5°–170°).
 """
 
 import json
@@ -79,6 +102,7 @@ ANGLE_TRIPLETS = [
 
 ANGLE_FEATURE_DIM = len(ANGLE_TRIPLETS)
 
+
 def _angle_between(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> float:
    """
    Returns the angle at vertex b (in radians) formed by rays b→a and b→c.
@@ -104,16 +128,16 @@ def compute_joint_angles(coords: np.ndarray) -> np.ndarray:
    Compute relative joint angles for one frame.
 
    Args:
-       coords (np.ndarray): shape (33, 3) — world (x, y, z) per landmark.
+       coords (np.ndarray): shape (33, 4) — world (x, y, z, v) per landmark.
 
    Returns:
        angles (np.ndarray): shape (ANGLE_FEATURE_DIM,) — one angle per
-                            triplet, in radians, normalised to [0, 1] by
-                            dividing by π.
+                            triplet, in radians.
    """
    angles = np.zeros(ANGLE_FEATURE_DIM, dtype=np.float32)
    for idx, (i, j, k) in enumerate(ANGLE_TRIPLETS):
-       angles[idx] = _angle_between(coords[i], coords[j], coords[k]) / math.pi
+       # Force strictly X,Y,Z into the math so visibility score is ignored
+       angles[idx] = _angle_between(coords[i][:3], coords[j][:3], coords[k][:3])
    return angles
 
 
@@ -129,34 +153,53 @@ class CoreSetGCN_Dataset(Dataset):
        'pull_up':     3,
    }
 
-   def __init__(self, data_dir: str, split_file: str, split_type: str = 'train', max_frames: int = 150, augment: bool = False):
-       self.data_dir = Path(data_dir)
+   def __init__(
+       self,
+       data_dir: str,
+       split_file: str,
+       split_type: str = 'train',
+       max_frames: int = 150,
+       augment: bool = False,
+   ):
+       self.data_dir   = Path(data_dir)
        self.max_frames = max_frames
-       self.augment = augment
+       self.augment    = augment
+
+       # FIX (Issue 4): mean_std is deprecated — retained only for backward
+       # compatibility with any external code that may reference it.
+       # It is never set or consulted in the current training pipeline.
+       # Normalisation is performed exclusively in train_stgcn.py.
+       self.mean_std: Optional[tuple] = None
 
        self.file_paths: List[Path] = []
        self.labels: List[int] = []
-       
+
        # Load the centralized split configuration
        with open(split_file, 'r') as f:
            splits = json.load(f)
-           
+
        if split_type not in splits:
-           raise ValueError(f"split_type must be one of {list(splits.keys() - {'metadata', 'subjects'})}")
-           
-       # Get the list of relative file paths for this split (e.g., ["bench_press/bench_press_094.json", ...])
+           raise ValueError(
+               f"split_type must be one of "
+               f"{list(splits.keys() - {'metadata', 'subjects'})}"
+           )
+
+       # Get the list of relative file paths for this split
+       # e.g. ["bench_press/bench_press_094.json", ...]
        split_files = splits[split_type]
-       
+
        for rel_path in split_files:
            full_path = self.data_dir / rel_path
            self.file_paths.append(full_path)
-           
+
            # Extract the exercise class from the parent directory name
            exercise_name = Path(rel_path).parent.name
            if exercise_name in self.EXERCISE_MAP:
                self.labels.append(self.EXERCISE_MAP[exercise_name])
            else:
-               raise ValueError(f"Unknown exercise class directory: {exercise_name}")
+               raise ValueError(
+                   f"Unknown exercise class directory: {exercise_name}"
+               )
 
    def __len__(self) -> int:
        return len(self.file_paths)
@@ -167,13 +210,13 @@ class CoreSetGCN_Dataset(Dataset):
 
    def _apply_augmentations(self, coords_seq: np.ndarray) -> np.ndarray:
        """
-       Apply in-place augmentations to the raw coordinate sequence before
-       angle computation.
-       """
-       if np.random.rand() > 0.5:
-           noise = np.random.normal(0.0, 0.005, coords_seq.shape)
-           coords_seq = coords_seq + noise.astype(np.float32)
+       Apply spatial mirroring augmentation to the raw coordinate sequence
+       before angle computation.
 
+       NOTE: Gaussian noise is NOT applied here (Issue 5 fix). It is applied
+       in train_stgcn.py AFTER Z-score normalisation so that the perturbation
+       scale is consistent across all angle channels.
+       """
        if np.random.rand() > 0.5:
            coords_seq = coords_seq.copy()
            coords_seq[:, :, 0] *= -1.0   # invert X axis
@@ -205,34 +248,35 @@ class CoreSetGCN_Dataset(Dataset):
 
        actual_frames = len(frames_list)
 
-       # --- Extract raw (x, y, z) world coordinates: shape (T, 33, 3) ---
-       coords_seq = np.zeros((actual_frames, 33, 3), dtype=np.float32)
+       # --- Extract raw (x, y, z, v) world coordinates: shape (T, 33, 4) ---
+       coords_seq = np.zeros((actual_frames, 33, 4), dtype=np.float32)
        for t_idx, frame in enumerate(frames_list):
-           # Handle new format gracefully
            if isinstance(frame, dict):
                lm = frame.get('landmarks', [])
            elif isinstance(frame, list):
                lm = frame
            else:
                continue
-               
+
            if lm:
-            coords = []
+               coords = []
+               for point in lm[:33]:
+                   if isinstance(point, dict):
+                       coords.append([
+                           point.get("x", 0.0),
+                           point.get("y", 0.0),
+                           point.get("z", 0.0),
+                           point.get("v", point.get("visibility", point.get("vis", 1.0)))
+                       ])
+                   else:
+                       pt = list(point[:4])
+                       if len(pt) == 3:
+                           pt.append(1.0)
+                       coords.append(pt)
 
-            for point in lm[:33]:
-                if isinstance(point, dict):
-                    coords.append([
-                        point.get("x", 0.0),
-                        point.get("y", 0.0),
-                        point.get("z", 0.0)
-                    ])
-                else:
-                    coords.append(point[:3])
-
-            arr = np.array(coords, dtype=np.float32)
-
-            if arr.shape == (33, 3):
-                coords_seq[t_idx] = arr
+               arr = np.array(coords, dtype=np.float32)
+               if arr.shape == (33, 4):
+                   coords_seq[t_idx] = arr
 
        # --- Augmentation on raw coordinates (before angle computation) ---
        if self.augment:
@@ -240,14 +284,24 @@ class CoreSetGCN_Dataset(Dataset):
 
        # --- Temporal sampling / padding ---
        if self.augment and actual_frames > self.max_frames:
-           idx = np.sort(np.random.choice(actual_frames, self.max_frames, replace=False))
+           idx = np.sort(
+               np.random.choice(actual_frames, self.max_frames, replace=False)
+           )
            coords_seq = coords_seq[idx]
        elif actual_frames >= self.max_frames:
            idx = np.linspace(0, actual_frames - 1, self.max_frames, dtype=int)
            coords_seq = coords_seq[idx]
        else:
-           pad = np.zeros((self.max_frames - actual_frames, 33, 3), dtype=np.float32)
-           coords_seq = np.concatenate([coords_seq, pad], axis=0)
+           # PAD FIX: Repeat last frame instead of collapsing to origin
+           if actual_frames > 0:
+               pad_length = self.max_frames - actual_frames
+               pad = np.tile(
+                   coords_seq[actual_frames - 1:actual_frames],
+                   (pad_length, 1, 1)
+               )
+               coords_seq = np.concatenate([coords_seq, pad], axis=0)
+           else:
+               coords_seq = np.zeros((self.max_frames, 33, 4), dtype=np.float32)
 
        # --- Compute joint angles: (max_frames, ANGLE_FEATURE_DIM) ---
        angle_seq = np.stack(
@@ -255,19 +309,36 @@ class CoreSetGCN_Dataset(Dataset):
            axis=0
        )  # shape: (max_frames, ANGLE_FEATURE_DIM)
 
-       # --- Build node feature tensor: broadcast angles to all nodes ---
-       angle_seq = angle_seq[:, np.newaxis, :]          # (T, 1, C)
-       angle_seq = np.tile(angle_seq, (1, 33, 1))       # (T, V, C)
-       angle_seq = angle_seq.transpose(2, 0, 1)         # (C, T, V)
-       angle_seq = angle_seq[:, :, :, np.newaxis]       # (C, T, V, 1)
+       # FIX (Issue 5): Gaussian noise removed from here.
+       # It is applied in train_stgcn.py AFTER Z-score normalisation so that
+       # the ±0.05 perturbation is always relative to one standardised unit,
+       # making the noise scale consistent across all angle channels.
 
-       return torch.from_numpy(angle_seq)
+       # FIX (Issue 4): Z-score normalisation removed from here.
+       # self.mean_std is never set in the current pipeline. Normalisation
+       # is performed in train_stgcn.py using per-channel statistics of shape
+       # (1, C, 1, 1, 1) that broadcast correctly against (B, C, T, V, 1).
+
+       # --- TOPOLOGY FIX: Map angles strictly to anatomical vertices ---
+       # Output shape: (Channels, Frames, Vertices, Persons) → (C, T, V, 1)
+       # where C = ANGLE_FEATURE_DIM, T = max_frames, V = 33
+       feature_tensor = np.zeros(
+           (ANGLE_FEATURE_DIM, self.max_frames, 33, 1), dtype=np.float32
+       )
+
+       for idx, (i, j, k) in enumerate(ANGLE_TRIPLETS):
+           # 'j' is the vertex joint (e.g., elbow in shoulder–elbow–wrist)
+           feature_tensor[idx, :, j, 0] = angle_seq[:, idx]
+
+       return torch.from_numpy(feature_tensor)
 
    # ------------------------------------------------------------------
    # Density-map ground truth
    # ------------------------------------------------------------------
 
-   def _get_ground_truth_density_map(self, filepath: Path, actual_frames: int) -> torch.Tensor:
+   def _get_ground_truth_density_map(
+       self, filepath: Path, actual_frames: int
+   ) -> torch.Tensor:
        """
        Build normalized density map from time_points.
 
@@ -279,7 +350,6 @@ class CoreSetGCN_Dataset(Dataset):
        Each point becomes a normalized Gaussian bump.
        The density map sum should be approximately equal to rep_count.
        """
-
        density_gt = np.zeros(self.max_frames, dtype=np.float32)
 
        with open(filepath, "r") as f:
@@ -289,7 +359,7 @@ class CoreSetGCN_Dataset(Dataset):
            return torch.from_numpy(density_gt)
 
        time_points = data.get("time_points", [])
-       rep_count = data.get("rep_count", len(time_points))
+       rep_count   = data.get("rep_count", len(time_points))
 
        if not time_points or actual_frames <= 0:
            return torch.from_numpy(density_gt)
@@ -313,24 +383,35 @@ class CoreSetGCN_Dataset(Dataset):
                )
 
        total = density_gt.sum()
-
        if total > 0:
            density_gt = density_gt / total * rep_count
 
        return torch.from_numpy(density_gt)
-   
+
    # ------------------------------------------------------------------
    # __getitem__
    # ------------------------------------------------------------------
 
    def __getitem__(self, idx: int):
+       """
+       Returns
+       -------
+       data_tensor : torch.Tensor, shape (C, T, V, 1)
+           Spatiotemporal graph of raw (un-normalised) joint angles.
+           C = ANGLE_FEATURE_DIM (14), T = max_frames, V = 33 nodes.
+           Z-score normalisation is applied in the training loop, not here.
+       label       : int
+           Integer class index (0–3).
+       density_gt  : torch.Tensor, shape (T,)
+           Normalised Gaussian density map over the temporal window.
+       """
        filepath = self.file_paths[idx]
-       label = self.labels[idx]
+       label    = self.labels[idx]
 
-       # Safe lightweight pre-read for actual frame count
+       # Lightweight pre-read for actual frame count (needed by density map)
        with open(filepath, 'r') as f:
            meta = json.load(f)
-           
+
        if isinstance(meta, list):
            actual_frames = len(meta)
        elif isinstance(meta, dict):
@@ -342,3 +423,30 @@ class CoreSetGCN_Dataset(Dataset):
        density_gt  = self._get_ground_truth_density_map(filepath, actual_frames)
 
        return data_tensor, label, density_gt
+
+   # ------------------------------------------------------------------
+   # Subject ID extraction (for GroupShuffleSplit / LOSOCV)
+   # ------------------------------------------------------------------
+
+   def get_subject_ids(self) -> List[str]:
+       """Smart Subject Extractor to handle varying filenames."""
+       known_subjects = [
+           'andrei', 'mariella', 'angelika', 'jhon',
+           'rod', 'arvin', 'audrey', 'nicole',
+       ]
+       subject_ids = []
+       for file_path in self.file_paths:
+           filename    = file_path.stem.lower()
+           assigned_id = "unknown"
+
+           for subject in known_subjects:
+               if subject in filename:
+                   assigned_id = subject
+                   break
+
+           if assigned_id == "unknown":
+               assigned_id = filename
+
+           subject_ids.append(assigned_id)
+
+       return subject_ids

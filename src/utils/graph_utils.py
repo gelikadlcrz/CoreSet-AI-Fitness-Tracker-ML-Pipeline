@@ -97,6 +97,10 @@ def build_blazepose_33_adjacency_matrix(self_loops=True):
         norm_adj (np.ndarray): Symmetrically-normalised adjacency matrix,
                                shape (33, 33), dtype float32.
     """
+    # FIX (Issue 6): Removed stray `self` parameter — this is a module-level
+    # function, not a method. Its presence caused a TypeError at every call
+    # site that passed only `self_loops`.
+
     num_nodes, connections = get_blazepose_33_topology()
 
     # Build binary symmetric adjacency matrix
