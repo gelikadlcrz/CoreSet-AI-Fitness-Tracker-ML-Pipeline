@@ -14,8 +14,8 @@ Architecture:
     └─────────────────────────────────┘
     ┌─────────────────────────────────────────────────────────────────┐
     │  Head 2: Density map                                            │
-    │  SpatialAvgPool (→ temporal series) → Dropout(0.3)             │
-    │  → Conv1d(128,1,k=1) → interpolate to max_frames → Sigmoid     │
+    │  SpatialAvgPool (→ temporal series) → Dropout(0.3)              │
+    │  → Conv1d(128,1,k=1) → interpolate to max_frames → Sigmoid      │
     └─────────────────────────────────────────────────────────────────┘
 
 MPS compatibility note:

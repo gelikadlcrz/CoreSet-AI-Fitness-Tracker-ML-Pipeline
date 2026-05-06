@@ -20,7 +20,12 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-
+"""
+SpatialGraphConvolution: This handles the "skeleton" part. It aggregates information from 
+neighboring joints. Crucially, it uses self.adj = nn.Parameter(...), meaning the adjacency 
+matrix is learnable. The model starts with a standard human skeleton but can adjust the 
+"bone connections" mathematically during training to optimize feature flow.
+"""
 class SpatialGraphConvolution(nn.Module):
     """
     Single-partition spatial graph convolution.
@@ -115,6 +120,30 @@ class TemporalConvolution(nn.Module):
 
         return x
 
+"""
+    Spatial-Temporal Graph Convolutional Block (ST_GCN_Block)
+
+    This block forms the foundational "brick" of the ST-GCN architecture,
+    sequentially combining feature extraction, stabilization, and gradient 
+    preservation mechanisms:
+
+    1. The Extractors (Convolutions):
+       - Spatial GCN: Extracts structural (pose) features by passing information 
+         between anatomically connected joints at a single frame.
+       - Temporal Conv: Extracts motion dynamics by tracking how those 
+         specific joint features change across sequential frames.
+
+    2. The Stabilizers (Batch Normalization):
+       - Applied immediately after both convolutions to standardize outputs 
+         (mean=0, variance=1). This prevents mathematical instability and 
+         accelerates the training process.
+
+    3. The Express Lane (Residual/Skip Connection):
+       - Mitigates the vanishing gradient problem inherent in deep networks.
+       - By adding the original input directly to the final output (Output = Layer(x) + x), 
+         it creates a clean "highway" for the error signal during backpropagation, 
+         ensuring that early layers continue to learn effectively.
+    """
 
 class ST_GCN_Block(nn.Module):
     """

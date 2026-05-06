@@ -1,3 +1,4 @@
+# TODO: losocv, density map generation, validation(do not throw away)
 """
 coreset_dataset.py — PyTorch Dataset for the CoreSet ST-GCN framework.
 
