@@ -24,3 +24,5 @@ scikit-learn>=1.2.0  # Updated with version
 
 # --- Deployment / Export ---
 onnx>=1.14.0
+litert-torch
+ai-edge-quantizer
