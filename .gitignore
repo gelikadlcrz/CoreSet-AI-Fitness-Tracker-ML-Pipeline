@@ -17,3 +17,5 @@ env/
 checkpoint/
 *.pth
 *.tflite
+
+.DS_Store
