@@ -124,8 +124,25 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     )
 
     # ------------------------------------------------------------------ #
+    #  Feature normalization — zero mean / unit variance                   #
+    #  Statistics computed from training partition ONLY (methodology §4)   #
+    # ------------------------------------------------------------------ #
+    print("  Computing normalization statistics from training set...")
+    all_train_features = []
+    for inputs, _, _ in train_loader:
+        all_train_features.append(inputs)  # (B, C, T, V, 1)
+
+    all_train_features = torch.cat(all_train_features, dim=0)  # (N, C, T, V, 1)
+    feat_mean = all_train_features.mean(dim=(0, 2, 3, 4), keepdim=True)  # (1, C, 1, 1, 1)
+    feat_std  = all_train_features.std(dim=(0, 2, 3, 4), keepdim=True).clamp(min=1e-6)
+
+    print(f"  Feature mean range: [{feat_mean.min():.4f}, {feat_mean.max():.4f}]")
+    print(f"  Feature std range:  [{feat_std.min():.4f}, {feat_std.max():.4f}]")
+    print("-" * 60)
+
+    # ------------------------------------------------------------------ #
     #  Model                                                               #
-    #  in_channels = ANGLE_FEATURE_DIM (14 joint angles per node)         #
+    #  in_channels = ANGLE_FEATURE_DIM (14 joint angles per node)          #
     # ------------------------------------------------------------------ #
     model = CoreSetSTGCN_MultiTask(
         in_channels=ANGLE_FEATURE_DIM,
@@ -142,8 +159,8 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     print("=" * 60)
 
     # ------------------------------------------------------------------ #
-    #  Optimiser — AdamW with L2 weight decay                             #
-    #  (Loshchilov & Hutter, 2019; methodology: weight_decay = 1e-4)      #
+    #  Optimiser — AdamW with L2 weight decay                              #
+    #  (Loshchilov & Hutter, 2019; methodology: weight_decay = 1e-4)       #
     # ------------------------------------------------------------------ #
     optimizer = optim.AdamW(
         model.parameters(),
@@ -152,8 +169,8 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     )
 
     # ------------------------------------------------------------------ #
-    #  LR scheduler — ReduceLROnPlateau                                   #
-    #  "reduction on validation loss plateau with patience=10, factor=0.5"#
+    #  LR scheduler — ReduceLROnPlateau                                    #
+    #  "reduction on validation loss plateau with patience=10, factor=0.5" #
     #  per the methodology Training Protocol section.                      #
     # ------------------------------------------------------------------ #
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -165,7 +182,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
 
     # ------------------------------------------------------------------ #
     #  Loss functions                                                      #
-    #  L_total = λ₁ · L_cls + λ₂ · L_density  (methodology equation)     #
+    #  L_total = λ₁ · L_cls + λ₂ · L_density  (methodology equation)       #
     # ------------------------------------------------------------------ #
     loss_classification = nn.CrossEntropyLoss()
     loss_density        = nn.MSELoss()
@@ -191,13 +208,14 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     for epoch in range(config['epochs']):
 
         # -------------------------------------------------------------- #
-        #  Training                                                        #
+        #  Training                                                      #
         # -------------------------------------------------------------- #
         model.train()
         total_train_loss = 0.0
 
         for inputs, labels, density_gts in train_loader:
             inputs      = inputs.to(device)
+            inputs      = (inputs - feat_mean.to(device)) / feat_std.to(device)  # ← Normalization added here
             labels      = labels.to(device)
             density_gts = density_gts.to(device)
 
@@ -217,7 +235,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
         avg_train_loss = total_train_loss / len(train_loader)
 
         # -------------------------------------------------------------- #
-        #  Validation                                                      #
+        #  Validation                                                    #
         # -------------------------------------------------------------- #
         model.eval()
         total_val_loss = 0.0
@@ -227,6 +245,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
         with torch.no_grad():
             for inputs, labels, density_gts in val_loader:
                 inputs      = inputs.to(device)
+                inputs      = (inputs - feat_mean.to(device)) / feat_std.to(device)  # ← Normalization added here
                 labels      = labels.to(device)
                 density_gts = density_gts.to(device)
 
@@ -257,7 +276,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
         )
 
         # -------------------------------------------------------------- #
-        #  LR scheduler step (on validation loss)                         #
+        #  LR scheduler step (on validation loss)                        #
         # -------------------------------------------------------------- #
         prev_lr = optimizer.param_groups[0]['lr']
         scheduler.step(avg_val_loss)
@@ -266,7 +285,7 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
             print(f"    LR reduced: {prev_lr:.2e} ➔ {new_lr:.2e}")
 
         # -------------------------------------------------------------- #
-        #  Checkpoint — save best model by validation loss                 #
+        #  Checkpoint — save best model by validation loss               #
         # -------------------------------------------------------------- #
         if avg_val_loss < best_val_loss:
             best_val_loss     = avg_val_loss
@@ -280,6 +299,8 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
                 'val_loss':          best_val_loss,
                 'val_accuracy':      best_val_accuracy,
                 'config':            config,
+                'feat_mean':         feat_mean,    # ← Added stats to checkpoint
+                'feat_std':          feat_std,     # ← Added stats to checkpoint
             }, checkpoint_path)
             print(f"    ✓ New best model saved "
                   f"(Val Loss: {best_val_loss:.4f}, "
@@ -290,14 +311,14 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
                   f"{epochs_without_improvement}/{early_stop_patience} epochs")
 
         # -------------------------------------------------------------- #
-        #  Early stopping                                                  #
+        #  Early stopping                                                #
         # -------------------------------------------------------------- #
         if epochs_without_improvement >= early_stop_patience:
             print(f"\n  Early stopping triggered after epoch {epoch + 1}.")
             break
 
     # ------------------------------------------------------------------ #
-    #  Final evaluation on held-out test set                              #
+    #  Final evaluation on held-out test set                             #
     # ------------------------------------------------------------------ #
     print("\n" + "=" * 60)
     print("  Loading best checkpoint for test-set evaluation...")
@@ -306,12 +327,17 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
 
+    # Note: Using the stats we just calculated, but loaded from the checkpoint
+    # would also be valid here. For continuity, we'll use the ones in memory.
+    
     all_test_logits = []
     all_test_labels = []
 
     with torch.no_grad():
         for inputs, labels, density_gts in test_loader:
             inputs = inputs.to(device)
+            inputs = (inputs - feat_mean.to(device)) / feat_std.to(device)  # ← Normalization added here
+            
             logits, _ = model(inputs)
             all_test_logits.append(logits.cpu())
             all_test_labels.append(labels)
