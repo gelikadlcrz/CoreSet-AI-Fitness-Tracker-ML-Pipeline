@@ -423,30 +423,3 @@ class CoreSetGCN_Dataset(Dataset):
        density_gt  = self._get_ground_truth_density_map(filepath, actual_frames)
 
        return data_tensor, label, density_gt
-
-   # ------------------------------------------------------------------
-   # Subject ID extraction (for GroupShuffleSplit / LOSOCV)
-   # ------------------------------------------------------------------
-
-   def get_subject_ids(self) -> List[str]:
-       """Smart Subject Extractor to handle varying filenames."""
-       known_subjects = [
-           'andrei', 'mariella', 'angelika', 'jhon',
-           'rod', 'arvin', 'audrey', 'nicole',
-       ]
-       subject_ids = []
-       for file_path in self.file_paths:
-           filename    = file_path.stem.lower()
-           assigned_id = "unknown"
-
-           for subject in known_subjects:
-               if subject in filename:
-                   assigned_id = subject
-                   break
-
-           if assigned_id == "unknown":
-               assigned_id = filename
-
-           subject_ids.append(assigned_id)
-
-       return subject_ids
