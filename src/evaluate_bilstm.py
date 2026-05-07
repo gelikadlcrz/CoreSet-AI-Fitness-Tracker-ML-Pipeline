@@ -3,8 +3,9 @@ from torch.utils.data import DataLoader
 import yaml
 import json
 import numpy as np
+import os
 
-from src.models.bilstm import MultiTaskBiLSTM
+from src.models.MultiTaskBiLSTM import MultiTaskBiLSTM
 from src.data.bilstm_dataset import BiLSTMDataset
 from src.utils.metrics import CoreSetEvaluator
 
@@ -21,7 +22,7 @@ def load_splits(path):
 
 def evaluate_bilstm(config_path):
     config = load_config(config_path)
-    splits = load_splits("config/data_splits.json")
+    splits = load_splits("configs/data_splits.json")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -40,7 +41,12 @@ def evaluate_bilstm(config_path):
         config['num_classes']
     ).to(device)
 
-    model.load_state_dict(torch.load("saved_models/best_bilstm.pth", weights_only=True))
+    model.load_state_dict(
+    torch.load(
+        os.path.join(config['checkpoint_dir'], 'best_bilstm.pth'),
+        map_location=device
+    )
+)
     model.eval()
 
     evaluator = CoreSetEvaluator()
@@ -58,8 +64,9 @@ def evaluate_bilstm(config_path):
 
             logits_all.append(logits.cpu())
             labels_all.append(y)
-            pred_counts.extend(rep_pred.cpu().numpy())
-            true_counts.extend(reps.numpy())
+
+            pred_counts.extend(rep_pred.cpu().numpy().flatten())
+            true_counts.extend(reps.cpu().numpy().flatten())
 
     logits_all = torch.cat(logits_all)
     labels_all = torch.cat(labels_all)

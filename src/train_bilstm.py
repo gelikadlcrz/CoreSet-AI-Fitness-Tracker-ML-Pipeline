@@ -5,10 +5,18 @@ from torch.utils.data import DataLoader
 import yaml
 import os
 import json
+import time
 
-from src.models.bilstm import MultiTaskBiLSTM
+
+
+from src.models.MultiTaskBiLSTM import MultiTaskBiLSTM
 from src.data.bilstm_dataset import BiLSTMDataset
 from src.utils.metrics import CoreSetEvaluator
+
+def count_parameters(model):
+    total = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return total, trainable
 
 
 def load_config(path):
@@ -23,7 +31,9 @@ def load_splits(path):
 
 def train_bilstm(config_path):
     config = load_config(config_path)
-    splits = load_splits("config/data_splits.json")
+    splits = load_splits("configs/data_splits.json")
+
+    torch.manual_seed(42)
 
     os.makedirs(config['checkpoint_dir'], exist_ok=True)
 
@@ -67,15 +77,22 @@ def train_bilstm(config_path):
 
     save_path = os.path.join(config['checkpoint_dir'], 'best_bilstm.pth')
 
+
     print("BiLSTM Multi-Task Training")
     print(f"Train: {len(train_dataset)} | Val: {len(val_dataset)} | Test: {len(test_dataset)}")
 
     for epoch in range(config['epochs']):
+        start_time = time.time()
+
         model.train()
         train_loss = 0
+        train_loss_cls = 0
+        train_loss_reg = 0
 
-        for x, y, reps in train_loader:
-            x, y, reps = x.to(device), y.to(device), reps.to(device)
+        for batch_idx, (x, y, reps) in enumerate(train_loader):
+            x = x.to(device)
+            y = y.to(device)
+            reps = reps.float().unsqueeze(1).to(device)
 
             optimizer.zero_grad()
 
@@ -87,28 +104,49 @@ def train_bilstm(config_path):
             loss = lambda_cls * loss_cls + lambda_reg * loss_reg
 
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             optimizer.step()
 
             train_loss += loss.item()
+            train_loss_cls += loss_cls.item()
+            train_loss_reg += loss_reg.item()
 
+            # 🔹 Batch-level logging (clean)
+            if batch_idx % 20 == 0:
+                print(f"Epoch [{epoch+1}/{config['epochs']}] "
+                    f"Batch [{batch_idx}/{len(train_loader)}] "
+                    f"Loss: {loss.item():.4f}")
+
+        # 🔹 Average training loss
         train_loss /= len(train_loader)
+        train_loss_cls /= len(train_loader)
+        train_loss_reg /= len(train_loader)
 
+        # ================= VALIDATION =================
         model.eval()
         val_loss = 0
+        val_loss_cls = 0
+        val_loss_reg = 0
+
         logits_all = []
         labels_all = []
 
         with torch.no_grad():
             for x, y, reps in val_loader:
-                x, y, reps = x.to(device), y.to(device), reps.to(device)
+                x = x.to(device)
+                y = y.to(device)
+                reps = reps.float().unsqueeze(1).to(device)
 
                 logits, rep_pred = model(x)
 
                 loss_cls = criterion_cls(logits, y)
                 loss_reg = criterion_reg(rep_pred, reps)
+
                 loss = lambda_cls * loss_cls + lambda_reg * loss_reg
 
                 val_loss += loss.item()
+                val_loss_cls += loss_cls.item()
+                val_loss_reg += loss_reg.item()
 
                 logits_all.append(logits.cpu())
                 labels_all.append(y.cpu())
@@ -120,7 +158,17 @@ def train_bilstm(config_path):
             torch.cat(labels_all)
         )
 
-        print(f"Epoch {epoch+1} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}")
+        current_lr = optimizer.param_groups[0]['lr']
+        epoch_time = time.time() - start_time
+
+        # 🔥 CLEAN EPOCH LOG
+        print("=" * 60)
+        print(f"Epoch [{epoch+1}/{config['epochs']}]")
+        print(f"Train Loss: {train_loss:.4f} (Cls: {train_loss_cls:.4f}, Reg: {train_loss_reg:.4f})")
+        print(f"Val Loss  : {val_loss:.4f}")
+        print(f"Val Acc   : {val_acc*100:.2f}%")
+        print(f"LR        : {current_lr:.2e}")
+        print(f"Time      : {epoch_time:.2f}s")
 
         scheduler.step(val_loss)
 
@@ -128,7 +176,7 @@ def train_bilstm(config_path):
             best_val_loss = val_loss
             torch.save(model.state_dict(), save_path)
             early_stop_counter = 0
-            print("Saved new best model")
+            print("✓ Saved new best model")
         else:
             early_stop_counter += 1
 
@@ -137,3 +185,7 @@ def train_bilstm(config_path):
             break
 
     print("Training complete")
+    
+    
+if __name__ == "__main__":
+    train_bilstm("configs/bilstm_config.yaml")

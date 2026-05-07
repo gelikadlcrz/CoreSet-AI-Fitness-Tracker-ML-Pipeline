@@ -9,15 +9,13 @@ class BiLSTMDataset(Dataset):
         self.data_dir = data_dir
         self.max_frames = max_frames
 
-        self.class_names = sorted([
-            d for d in os.listdir(data_dir)
-            if os.path.isdir(os.path.join(data_dir, d))
-        ])
+        self.class_names = ['bench_press', 'pull_up', 'push_up', 'squat']
         self.class_to_idx = {name: idx for idx, name in enumerate(self.class_names)}
 
         for item in split_list:
             pt_file = item.replace(".json", ".pt")
-            class_name = pt_file.split("/")[0]
+
+            class_name = os.path.dirname(pt_file)
             full_path = os.path.join(data_dir, pt_file)
 
             if os.path.exists(full_path):
@@ -32,7 +30,7 @@ class BiLSTMDataset(Dataset):
     def __getitem__(self, idx):
         path, label = self.samples[idx]
 
-        loaded = torch.load(path, weights_only=True)
+        loaded = torch.load(path)
 
         data = loaded['sequence'].float()
         rep_count = float(loaded.get('rep_count', 0))
@@ -42,7 +40,10 @@ class BiLSTMDataset(Dataset):
         if num_frames > self.max_frames:
             data = data[:self.max_frames]
         elif num_frames < self.max_frames:
-            padding = torch.zeros((self.max_frames - num_frames, data.shape[1]))
+            padding = torch.zeros(
+                (self.max_frames - num_frames, data.shape[1]),
+                dtype=data.dtype
+            )
             data = torch.cat([data, padding], dim=0)
 
         return data, label, rep_count

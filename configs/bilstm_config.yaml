@@ -1,20 +1,20 @@
-# Data Paths
 data_dir: "data/flattened_tensors"
 checkpoint_dir: "saved_models"
 
-# Model Hyperparameters
-input_size: 132  
-num_classes: 4   
-hidden_size: 128 
-num_layers: 2    
+input_size: 132
+num_classes: 4
+hidden_size: 128
+num_layers: 2
 max_frames: 150
 
-# Optimized Training Hyperparameters
-batch_size: 32         
+batch_size: 32
 epochs: 100
 
-# Optimization & Regularization
-learning_rate: 0.001     
-weight_decay: 0.0001    
-patience_lr: 10          
+learning_rate: 0.001
+weight_decay: 0.0001
+
+patience_lr: 10
 patience_early_stop: 15
+
+lambda_cls: 1.0
+lambda_reg: 0.5
