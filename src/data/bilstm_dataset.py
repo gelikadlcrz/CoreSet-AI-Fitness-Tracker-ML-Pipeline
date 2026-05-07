@@ -33,17 +33,21 @@ class BiLSTMDataset(Dataset):
         loaded = torch.load(path)
 
         data = loaded['sequence'].float()
+
         rep_count = float(loaded.get('rep_count', 0))
 
         num_frames = data.shape[0]
 
         if num_frames > self.max_frames:
             data = data[:self.max_frames]
+
         elif num_frames < self.max_frames:
+
             padding = torch.zeros(
                 (self.max_frames - num_frames, data.shape[1]),
                 dtype=data.dtype
             )
+
             data = torch.cat([data, padding], dim=0)
 
         return data, label, rep_count
