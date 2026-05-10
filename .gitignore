@@ -12,6 +12,7 @@ __pycache__/
 .venv/
 venv/
 env/
+venv_broken_20260510/
 
 # Machine Learning Data & Models
 checkpoint/
