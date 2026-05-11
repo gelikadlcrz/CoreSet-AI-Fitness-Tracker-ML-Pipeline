@@ -1,0 +1,623 @@
+path,category,rep_count,time_points,max_motion,min_selected_motion,flags
+bench_press/bench_press_001.json,bench_press,2,"[2, 43]",0.637265145864767,0.2981541857600533,edge_time_point
+bench_press/bench_press_001_aug_5_speed.json,bench_press,1,[2],0.6223067998862833,0.6223067998862833,edge_time_point;single_rep_count
+bench_press/bench_press_002.json,bench_press,1,[28],0.5733779169787624,0.5733779169787624,single_rep_count
+bench_press/bench_press_003.json,bench_press,1,[5],0.533201764350115,0.533201764350115,single_rep_count
+bench_press/bench_press_003_aug_55_noise.json,bench_press,2,"[5, 19]",0.568752485693305,0.21985317351233621,low_motion_peak
+bench_press/bench_press_005.json,bench_press,2,"[5, 49]",0.5734046372124694,0.15354740975580905,low_motion_peak
+bench_press/bench_press_006_aug_49_speed.json,bench_press,4,"[5, 31, 39, 45]",0.7929923546077867,0.46926624911939874,close_time_points
+bench_press/bench_press_007.json,bench_press,1,[6],0.6987280769877717,0.6987280769877717,single_rep_count
+bench_press/bench_press_007_aug_56_speed.json,bench_press,1,[6],0.5252853143120119,0.5252853143120119,single_rep_count
+bench_press/bench_press_009.json,bench_press,1,[5],0.5561394025486964,0.5561394025486964,single_rep_count
+bench_press/bench_press_012_aug_50_speed.json,bench_press,2,"[22, 34]",0.5538494159655853,0.21217841850716063,low_motion_peak
+bench_press/bench_press_013.json,bench_press,3,"[7, 35, 42]",0.596714185159553,0.2048004009360457,low_motion_peak
+bench_press/bench_press_014.json,bench_press,4,"[28, 41, 50, 61]",0.6738838665053883,0.293505796967752,edge_time_point
+bench_press/bench_press_016.json,bench_press,1,[24],0.650834811142728,0.650834811142728,single_rep_count
+bench_press/bench_press_017.json,bench_press,3,"[43, 50, 62]",0.5668446741579876,0.2636543525847094,edge_time_point
+bench_press/bench_press_017_aug_88_speed.json,bench_press,3,"[44, 50, 62]",0.4670946451786083,0.22734842321745677,edge_time_point;low_motion_peak;close_time_points
+bench_press/bench_press_019.json,bench_press,2,"[2, 57]",0.4729723233641387,0.41978298257987473,edge_time_point
+bench_press/bench_press_020.json,bench_press,3,"[6, 29, 41]",0.5686584298329215,0.21945989074621694,low_motion_peak
+bench_press/bench_press_020_aug_66_speed.json,bench_press,3,"[5, 18, 29]",0.5384462433639161,0.19328756882734283,low_motion_peak
+bench_press/bench_press_021.json,bench_press,3,"[5, 11, 21]",0.5390114378692894,0.26673680460458254,close_time_points
+bench_press/bench_press_023.json,bench_press,3,"[3, 12, 33]",0.6567574918757181,0.24454576571259903,low_motion_peak
+bench_press/bench_press_024.json,bench_press,3,"[2, 40, 46]",0.6231456691662851,0.31010141409579833,edge_time_point;close_time_points
+bench_press/bench_press_024_aug_24_noise.json,bench_press,3,"[2, 40, 46]",0.652758474873553,0.36124310416233407,edge_time_point;close_time_points
+bench_press/bench_press_024_aug_48_speed.json,bench_press,1,[2],0.6497967166635642,0.6497967166635642,edge_time_point;single_rep_count
+bench_press/bench_press_025_aug_71_speed.json,bench_press,2,"[11, 36]",0.572512732758701,0.18792555379731077,low_motion_peak
+bench_press/bench_press_027.json,bench_press,3,"[2, 10, 51]",0.5329391536446189,0.28877245962531445,edge_time_point
+bench_press/bench_press_029.json,bench_press,1,[2],0.5878000196175438,0.5878000196175438,edge_time_point;single_rep_count
+bench_press/bench_press_031.json,bench_press,3,"[1, 24, 50]",0.46161152953545315,0.2418827882956063,edge_time_point;low_motion_peak
+bench_press/bench_press_031_aug_59_flip.json,bench_press,3,"[1, 24, 50]",0.4638358672448787,0.24556534121868007,edge_time_point;low_motion_peak
+bench_press/bench_press_034.json,bench_press,2,"[2, 15]",0.5878299752743504,0.15855547984390278,edge_time_point;low_motion_peak
+bench_press/bench_press_035.json,bench_press,3,"[12, 37, 62]",0.6464707715156487,0.348707919866942,edge_time_point
+bench_press/bench_press_035_aug_26_noise.json,bench_press,3,"[12, 37, 61]",0.6348032870273017,0.3703794632923122,edge_time_point
+bench_press/bench_press_035_aug_81_noise.json,bench_press,3,"[12, 37, 61]",0.6649384734297221,0.3922659215097882,edge_time_point
+bench_press/bench_press_036.json,bench_press,3,"[28, 46, 62]",0.5445544067641002,0.29806923429317067,edge_time_point
+bench_press/bench_press_036_aug_73_noise.json,bench_press,2,"[28, 62]",0.5834413258964953,0.4853130514057547,edge_time_point
+bench_press/bench_press_036_aug_96_flip.json,bench_press,3,"[28, 46, 62]",0.5526233231486773,0.20738704459842386,edge_time_point;low_motion_peak
+bench_press/bench_press_038.json,bench_press,3,"[1, 19, 29]",0.47388929728239637,0.3276448799045248,edge_time_point
+bench_press/bench_press_039.json,bench_press,5,"[29, 37, 46, 54, 61]",0.752396535480767,0.587631590200073,edge_time_point
+bench_press/bench_press_040.json,bench_press,2,"[1, 17]",0.3920677034164502,0.17687175595006885,edge_time_point;low_motion_peak
+bench_press/bench_press_041_aug_37_speed.json,bench_press,5,"[11, 20, 26, 35, 44]",0.6882280595222455,0.5078467659390276,close_time_points
+bench_press/bench_press_043.json,bench_press,1,[56],0.5286100739282301,0.5286100739282301,single_rep_count
+bench_press/bench_press_043_aug_11_speed.json,bench_press,1,[57],0.7311807368810963,0.7311807368810963,single_rep_count
+bench_press/bench_press_043_aug_8_noise.json,bench_press,2,"[55, 61]",0.5292798711010508,0.2358248753850175,edge_time_point;low_motion_peak;close_time_points
+bench_press/bench_press_047.json,bench_press,3,"[2, 28, 34]",0.6335945817609043,0.2773870931076636,edge_time_point;close_time_points
+bench_press/bench_press_049.json,bench_press,4,"[2, 26, 40, 60]",0.6259428608272007,0.4362003286188613,edge_time_point
+bench_press/bench_press_050.json,bench_press,5,"[9, 40, 47, 55, 61]",0.6572896874762676,0.3505134543353074,edge_time_point;close_time_points
+bench_press/bench_press_053.json,bench_press,3,"[36, 45, 53]",0.6022187284347842,0.17580461666512837,low_motion_peak
+bench_press/bench_press_054.json,bench_press,4,"[5, 11, 36, 43]",0.8946135035703654,0.6027662360914902,close_time_points
+bench_press/bench_press_055.json,bench_press,3,"[4, 10, 18]",0.7634360459697948,0.5039247744784288,close_time_points
+bench_press/bench_press_055_aug_53_flip.json,bench_press,3,"[4, 10, 18]",0.7212226428102888,0.47908015134711546,close_time_points
+bench_press/bench_press_055_aug_67_noise.json,bench_press,3,"[4, 10, 18]",0.7854662471735931,0.4642049036545298,close_time_points
+bench_press/bench_press_056.json,bench_press,3,"[2, 12, 20]",0.5565145030711757,0.3117328453201847,edge_time_point
+bench_press/bench_press_056_aug_40_flip.json,bench_press,3,"[1, 14, 20]",0.6675012834054244,0.32445697887781283,edge_time_point;close_time_points
+bench_press/bench_press_057.json,bench_press,5,"[11, 17, 24, 31, 55]",0.5154717271296559,0.24871216403712743,low_motion_peak;close_time_points
+bench_press/bench_press_058.json,bench_press,5,"[6, 12, 29, 39, 62]",0.5829524815205315,0.3500021005241915,edge_time_point;close_time_points
+bench_press/bench_press_059.json,bench_press,1,[1],0.40919279064663316,0.40919279064663316,edge_time_point;single_rep_count
+bench_press/bench_press_062.json,bench_press,3,"[5, 11, 19]",0.6593970689826918,0.38096594826859165,close_time_points
+bench_press/bench_press_062_aug_6_noise.json,bench_press,3,"[5, 11, 19]",0.5862125875488303,0.567262451761088,close_time_points
+bench_press/bench_press_063.json,bench_press,1,[41],0.6782150620555227,0.6782150620555227,single_rep_count
+bench_press/bench_press_063_aug_2_flip.json,bench_press,1,[41],0.6776301989322043,0.6776301989322043,single_rep_count
+bench_press/bench_press_063_aug_80_speed.json,bench_press,2,"[43, 59]",0.6016320854717996,0.16398124647028423,low_motion_peak
+bench_press/bench_press_064_aug_76_noise.json,bench_press,2,"[31, 39]",0.6771091655196201,0.1739975280132351,low_motion_peak
+bench_press/bench_press_065.json,bench_press,4,"[30, 36, 47, 53]",0.5966682580124746,0.2912770245988721,close_time_points
+bench_press/bench_press_066.json,bench_press,4,"[8, 31, 44, 50]",0.5925973256865508,0.3515357067336785,close_time_points
+bench_press/bench_press_066_aug_77_flip.json,bench_press,5,"[8, 26, 35, 44, 50]",0.709201053705952,0.4252580727679518,close_time_points
+bench_press/bench_press_068.json,bench_press,2,"[47, 58]",0.4845321879187397,0.1991935313462187,low_motion_peak
+bench_press/bench_press_068_aug_0_flip.json,bench_press,1,[47],0.46486687666979964,0.46486687666979964,single_rep_count
+bench_press/bench_press_069.json,bench_press,1,[12],0.6071215283972135,0.6071215283972135,single_rep_count
+bench_press/bench_press_070.json,bench_press,3,"[44, 52, 58]",0.5362218979585391,0.2871828392148772,close_time_points
+bench_press/bench_press_073.json,bench_press,4,"[10, 16, 53, 59]",0.6041543378446786,0.2689728494303429,close_time_points
+bench_press/bench_press_073_aug_39_flip.json,bench_press,4,"[10, 16, 53, 59]",0.6412395567100122,0.3419477044336723,close_time_points
+bench_press/bench_press_074.json,bench_press,1,[41],0.5790733663431,0.5790733663431,single_rep_count
+bench_press/bench_press_076.json,bench_press,3,"[1, 48, 54]",0.4064405586776305,0.15651985874809576,edge_time_point;low_motion_peak;close_time_points
+bench_press/bench_press_076_aug_18_speed.json,bench_press,2,"[1, 48]",0.39241778025061236,0.18897929365937993,edge_time_point;low_motion_peak
+bench_press/bench_press_077.json,bench_press,1,[8],0.49657845881270707,0.49657845881270707,single_rep_count
+bench_press/bench_press_077_aug_35_flip.json,bench_press,1,[8],0.513801552858969,0.513801552858969,single_rep_count
+bench_press/bench_press_077_aug_90_flip.json,bench_press,1,[8],0.513801552858969,0.513801552858969,single_rep_count
+bench_press/bench_press_078_aug_72_flip.json,bench_press,4,"[6, 26, 32, 40]",0.6793596279289892,0.5107495780489523,close_time_points
+bench_press/bench_press_080.json,bench_press,1,[10],0.6262232748559685,0.6262232748559685,single_rep_count
+bench_press/bench_press_080_aug_20_noise.json,bench_press,1,[10],0.6096098691298505,0.6096098691298505,single_rep_count
+bench_press/bench_press_080_aug_3_noise.json,bench_press,2,"[4, 10]",0.5832813016358915,0.3026677634931446,close_time_points
+bench_press/bench_press_080_aug_4_speed.json,bench_press,1,[8],0.5622646548019294,0.5622646548019294,single_rep_count
+bench_press/bench_press_082.json,bench_press,1,[57],0.6060989537710231,0.6060989537710231,single_rep_count
+bench_press/bench_press_084.json,bench_press,4,"[6, 18, 47, 61]",0.6359111139973807,0.3867474293454385,edge_time_point
+bench_press/bench_press_086_aug_17_speed.json,bench_press,5,"[1, 11, 20, 51, 59]",0.4829164089256338,0.3860772027484126,edge_time_point
+bench_press/bench_press_086_aug_34_noise.json,bench_press,5,"[2, 10, 17, 26, 59]",0.7023917872844797,0.4139524018435644,edge_time_point
+bench_press/bench_press_086_aug_91_speed.json,bench_press,5,"[1, 11, 20, 51, 59]",0.4829164089256338,0.3860772027484126,edge_time_point
+bench_press/bench_press_087_aug_22_noise.json,bench_press,2,"[14, 24]",0.5289287108989964,0.21403674054957642,low_motion_peak
+bench_press/bench_press_087_aug_38_noise.json,bench_press,2,"[9, 15]",0.5356758054481408,0.4685195978690151,close_time_points
+bench_press/bench_press_088.json,bench_press,3,"[2, 49, 55]",0.5328335365879027,0.39944425823099067,edge_time_point;close_time_points
+bench_press/bench_press_091.json,bench_press,1,[37],0.6880274852848873,0.6880274852848873,single_rep_count
+bench_press/bench_press_093.json,bench_press,1,[41],0.5926764468202399,0.5926764468202399,single_rep_count
+bench_press/bench_press_094.json,bench_press,1,[18],0.5866723554653367,0.5866723554653367,single_rep_count
+bench_press/bench_press_094_aug_89_flip.json,bench_press,1,[18],0.5849785188814884,0.5849785188814884,single_rep_count
+bench_press/bench_press_096_person1.json,bench_press,3,"[2, 22, 34]",0.5807548617683769,0.28640340898669747,edge_time_point
+bench_press/bench_press_102_person3_aug_92_noise.json,bench_press,6,"[3, 16, 22, 29, 54, 61]",0.6404876911464019,0.3982306475569214,edge_time_point;close_time_points
+bench_press/bench_press_102_person3_aug_98_flip.json,bench_press,4,"[3, 23, 54, 61]",0.5864953232771832,0.3564211122813288,edge_time_point
+bench_press/bench_press_104_person3.json,bench_press,4,"[11, 36, 56, 62]",0.6872777460127552,0.4593153063684201,edge_time_point;close_time_points
+bench_press/bench_press_105_person4.json,bench_press,1,[14],0.7602023730286516,0.7602023730286516,single_rep_count
+bench_press/bench_press_106_person4_aug_52_noise.json,bench_press,2,"[17, 58]",0.5203050977887806,0.1851721253593363,low_motion_peak
+bench_press/bench_press_107_person4.json,bench_press,1,[3],0.5611908092947764,0.5611908092947764,single_rep_count
+bench_press/bench_press_108_person4.json,bench_press,3,"[20, 29, 62]",0.4263277188747045,0.2062137214388899,edge_time_point;low_motion_peak
+bench_press/bench_press_109_person5.json,bench_press,1,[2],0.5382537862483686,0.5382537862483686,edge_time_point;single_rep_count
+bench_press/bench_press_109_person5_aug_10_noise.json,bench_press,2,"[2, 9]",0.6145959224141836,0.31304250608370743,edge_time_point
+bench_press/bench_press_112_person6.json,bench_press,5,"[8, 31, 40, 53, 61]",0.7036777440202802,0.47304811192195023,edge_time_point
+bench_press/bench_press_112_person6_aug_42_speed.json,bench_press,5,"[9, 31, 40, 51, 62]",0.7388564563222814,0.3804700128513497,edge_time_point
+bench_press/bench_press_113_person7.json,bench_press,2,"[9, 29]",0.49158792584382216,0.2359308213038682,low_motion_peak
+bench_press/bench_press_114_person7.json,bench_press,4,"[1, 30, 41, 48]",0.5975077694136928,0.4266613709197538,edge_time_point
+bench_press/bench_press_117_person7.json,bench_press,4,"[2, 11, 24, 51]",0.6309985507208118,0.3178396072924114,edge_time_point
+bench_press/bench_press_118_person8.json,bench_press,3,"[3, 9, 61]",0.4299685610984398,0.16840926584052573,edge_time_point;low_motion_peak;close_time_points
+bench_press/bench_press_118_person8_aug_78_noise.json,bench_press,3,"[3, 9, 61]",0.43357687280452223,0.16461708648090562,edge_time_point;low_motion_peak;close_time_points
+bench_press/bench_press_119_person8_aug_19_speed.json,bench_press,4,"[22, 31, 37, 51]",0.6219741021490952,0.30996795706517094,close_time_points
+bench_press/bench_press_119_person8_aug_57_noise.json,bench_press,4,"[22, 31, 37, 51]",0.6297756614576492,0.4060316213539228,close_time_points
+bench_press/bench_press_120_person9.json,bench_press,3,"[33, 52, 58]",0.5693626411317001,0.41121917907863115,close_time_points
+bench_press/bench_press_122_person9.json,bench_press,2,"[2, 55]",0.519021792314679,0.1531731372329699,edge_time_point;low_motion_peak
+bench_press/bench_press_123_person9.json,bench_press,4,"[2, 23, 30, 58]",0.6927325080480301,0.47772761833295135,edge_time_point
+bench_press/bench_press_123_person9_aug_85_flip.json,bench_press,4,"[2, 23, 30, 58]",0.6965994042750531,0.4807696633065101,edge_time_point
+bench_press/bench_press_123_person9_aug_9_noise.json,bench_press,5,"[2, 10, 19, 30, 54]",0.7138718927795961,0.5217015363069619,edge_time_point
+bench_press/bench_press_124_person10.json,bench_press,3,"[8, 48, 62]",0.5886326249634326,0.25865865613506245,edge_time_point
+bench_press/bench_press_124_person10_aug_41_speed.json,bench_press,3,"[18, 51, 62]",0.6060198106343534,0.504170100604433,edge_time_point
+bench_press/bench_press_125_person10.json,bench_press,4,"[1, 17, 31, 49]",0.7196175706425813,0.39281364826668635,edge_time_point
+bench_press/bench_press_125_person10_aug_13_flip.json,bench_press,4,"[1, 17, 31, 49]",0.7260818179224345,0.4360076531152399,edge_time_point
+bench_press/bench_press_127_person10.json,bench_press,3,"[23, 29, 61]",0.7134541585399987,0.30969137201782754,edge_time_point;close_time_points
+bench_press/bench_press_128_person11.json,bench_press,1,[21],0.6170225193613437,0.6170225193613437,single_rep_count
+bench_press/bench_press_128_person11_aug_27_speed.json,bench_press,1,[21],0.5134136040021586,0.5134136040021586,single_rep_count
+bench_press/bench_press_128_person11_aug_29_speed.json,bench_press,1,[21],0.5134136040021586,0.5134136040021586,single_rep_count
+bench_press/bench_press_129_person11.json,bench_press,5,"[1, 24, 30, 41, 53]",0.4431765640711352,0.36847072894073596,edge_time_point;close_time_points
+bench_press/bench_press_130_person11.json,bench_press,2,"[2, 17]",0.42881204276059154,0.4005365507617718,edge_time_point
+bench_press/bench_press_135_person13.json,bench_press,1,[8],0.4799070297934147,0.4799070297934147,single_rep_count
+bench_press/bench_press_136_person14.json,bench_press,2,"[2, 9]",0.7542851027461372,0.4660988795354435,edge_time_point
+bench_press/bench_press_139_person14.json,bench_press,1,[50],0.4683666168222505,0.4683666168222505,single_rep_count
+bench_press/bench_press_140_person14.json,bench_press,4,"[2, 11, 50, 62]",0.5076803326033487,0.3123272765018216,edge_time_point
+bench_press/bench_press_142_person15.json,bench_press,6,"[4, 14, 26, 37, 45, 62]",0.5788051056807124,0.4669330536542543,edge_time_point
+bench_press/bench_press_143_person15.json,bench_press,1,[28],0.5474207697980933,0.5474207697980933,single_rep_count
+bench_press/bench_press_144_person15.json,bench_press,2,"[1, 17]",0.4645472260748804,0.16435357277487658,edge_time_point;low_motion_peak
+bench_press/bench_press_145_person15.json,bench_press,4,"[1, 9, 24, 59]",0.687196274414782,0.4575547664764295,edge_time_point
+bench_press/bench_press_146_person15.json,bench_press,3,"[11, 37, 43]",0.653656608214965,0.4735025919388263,close_time_points
+bench_press/bench_press_147_person15.json,bench_press,4,"[1, 13, 24, 60]",0.39352296843889034,0.1646817434176743,edge_time_point;low_motion_peak
+bench_press/bench_press_147_person15_aug_14_flip.json,bench_press,4,"[1, 13, 48, 60]",0.3927444850944285,0.16467964879168917,edge_time_point;low_motion_peak
+bench_press/bench_press_147_person15_aug_64_noise.json,bench_press,5,"[1, 7, 13, 24, 32]",0.40151875737664794,0.21590510517454467,edge_time_point;low_motion_peak;close_time_points
+bench_press/bench_press_148_person15.json,bench_press,1,[4],0.7128798609490409,0.7128798609490409,single_rep_count
+bench_press/bench_press_148_person15_aug_16_speed.json,bench_press,2,"[7, 15]",0.6068623288920724,0.16570528237870544,low_motion_peak
+bench_press/bench_press_150_person15.json,bench_press,6,"[1, 9, 21, 36, 50, 56]",0.4199667170373368,0.28444274599015734,edge_time_point;close_time_points
+bench_press/bench_press_151_person15.json,bench_press,3,"[2, 9, 40]",0.5594422535801279,0.2301326755004041,edge_time_point;low_motion_peak
+pull_up/pull_up_001.json,pull_up,8,"[1, 8, 16, 24, 32, 39, 48, 55]",0.4098294357442991,0.2591888578174782,edge_time_point;high_rep_count
+pull_up/pull_up_001_aug_107_flip.json,pull_up,8,"[1, 8, 16, 24, 32, 39, 48, 55]",0.4084511954470697,0.26168430109757473,edge_time_point;high_rep_count
+pull_up/pull_up_001_aug_47_noise.json,pull_up,8,"[1, 8, 16, 25, 32, 39, 49, 55]",0.427640049151544,0.3384449787993862,edge_time_point;high_rep_count;close_time_points
+pull_up/pull_up_002.json,pull_up,5,"[10, 19, 48, 54, 61]",0.6772406705226108,0.4433561779350068,edge_time_point;close_time_points
+pull_up/pull_up_003.json,pull_up,3,"[4, 29, 59]",0.47200219528944054,0.19312031350365993,low_motion_peak
+pull_up/pull_up_004.json,pull_up,1,[53],0.4373424787121189,0.23134157473863817,single_rep_count;low_motion_peak
+pull_up/pull_up_004_aug_6_speed.json,pull_up,2,"[49, 58]",0.3941818677879812,0.15277593256760885,low_motion_peak
+pull_up/pull_up_005.json,pull_up,4,"[5, 17, 29, 43]",0.4092744844657227,0.24138112730128236,low_motion_peak
+pull_up/pull_up_006.json,pull_up,3,"[6, 13, 48]",0.5614351918583714,0.21744365108321798,low_motion_peak
+pull_up/pull_up_010.json,pull_up,1,[9],0.6209608381263135,0.6209608381263135,single_rep_count
+pull_up/pull_up_010_aug_29_flip.json,pull_up,1,[9],0.6167497377368016,0.6167497377368016,single_rep_count
+pull_up/pull_up_010_aug_69_noise.json,pull_up,2,"[9, 20]",0.6708536253932722,0.23507167859327616,low_motion_peak
+pull_up/pull_up_011.json,pull_up,4,"[1, 11, 19, 41]",0.3535109744452739,0.20893979866389636,edge_time_point;low_motion_peak
+pull_up/pull_up_011_aug_50_speed.json,pull_up,4,"[1, 11, 19, 41]",0.36227971715004204,0.19316519360973142,edge_time_point;low_motion_peak
+pull_up/pull_up_013.json,pull_up,2,"[1, 61]",0.3714462897502945,0.36886812224654403,edge_time_point
+pull_up/pull_up_014.json,pull_up,2,"[37, 58]",0.5697944575568584,0.19035273237563483,low_motion_peak
+pull_up/pull_up_014_aug_54_speed.json,pull_up,3,"[13, 43, 58]",0.5683631657877529,0.21761970035204886,low_motion_peak
+pull_up/pull_up_014_aug_84_noise.json,pull_up,2,"[37, 58]",0.5813187570629091,0.21590433415256893,low_motion_peak
+pull_up/pull_up_015_aug_2_flip.json,pull_up,5,"[9, 17, 45, 54, 60]",0.9028939723987108,0.5520106062389656,close_time_points
+pull_up/pull_up_017.json,pull_up,4,"[1, 8, 21, 44]",0.4529670026290953,0.2322891700253537,edge_time_point;low_motion_peak
+pull_up/pull_up_017_aug_58_speed.json,pull_up,4,"[1, 8, 21, 44]",0.4550229206022058,0.23011535822644233,edge_time_point;low_motion_peak
+pull_up/pull_up_018.json,pull_up,1,[9],0.6095825017929738,0.6095825017929738,single_rep_count
+pull_up/pull_up_019.json,pull_up,5,"[21, 27, 35, 47, 60]",0.6894227565557703,0.4597928941656701,close_time_points
+pull_up/pull_up_019_aug_116_noise.json,pull_up,5,"[21, 27, 35, 47, 60]",0.6897562332366161,0.4931097865706563,close_time_points
+pull_up/pull_up_019_aug_86_speed.json,pull_up,6,"[21, 27, 35, 42, 48, 60]",0.6863084316011073,0.42751716719246496,close_time_points
+pull_up/pull_up_019_aug_8_noise.json,pull_up,5,"[21, 27, 35, 47, 60]",0.6968550038553708,0.49335318213429286,close_time_points
+pull_up/pull_up_021.json,pull_up,7,"[2, 25, 32, 39, 46, 53, 59]",0.5598926287518835,0.4505297772629761,edge_time_point;high_rep_count;close_time_points
+pull_up/pull_up_022.json,pull_up,4,"[2, 13, 19, 28]",0.7736801387487909,0.5352772951130647,edge_time_point;close_time_points
+pull_up/pull_up_022_aug_30_noise.json,pull_up,4,"[2, 13, 19, 28]",0.7752911055477876,0.5379225901864005,edge_time_point;close_time_points
+pull_up/pull_up_023.json,pull_up,3,"[1, 15, 46]",0.5114084963041146,0.3229597866981237,edge_time_point
+pull_up/pull_up_023_aug_27_flip.json,pull_up,3,"[1, 15, 46]",0.5204848536596776,0.34876888274412043,edge_time_point
+pull_up/pull_up_024.json,pull_up,3,"[11, 32, 42]",0.5794402427890186,0.21004392493411925,low_motion_peak
+pull_up/pull_up_025.json,pull_up,5,"[2, 9, 15, 33, 51]",0.6506596571362009,0.3412889844883204,edge_time_point;close_time_points
+pull_up/pull_up_025_aug_100_noise.json,pull_up,5,"[2, 8, 15, 33, 51]",0.6615374307379951,0.41479412785217723,edge_time_point;close_time_points
+pull_up/pull_up_025_aug_114_noise.json,pull_up,5,"[2, 8, 15, 33, 51]",0.6463575070981479,0.36008122590457303,edge_time_point;close_time_points
+pull_up/pull_up_026.json,pull_up,6,"[1, 21, 28, 35, 43, 52]",0.5001251772473938,0.40145186022792456,edge_time_point
+pull_up/pull_up_029.json,pull_up,3,"[19, 26, 61]",0.5724268664481128,0.22375073712600516,edge_time_point;low_motion_peak
+pull_up/pull_up_029_aug_64_flip.json,pull_up,3,"[19, 26, 61]",0.5776417662611826,0.206585534630601,edge_time_point;low_motion_peak
+pull_up/pull_up_029_aug_71_flip.json,pull_up,3,"[19, 26, 61]",0.5776417662611826,0.206585534630601,edge_time_point;low_motion_peak
+pull_up/pull_up_030.json,pull_up,3,"[2, 51, 61]",0.6525536392537012,0.311824396910961,edge_time_point
+pull_up/pull_up_033_aug_62_speed.json,pull_up,1,[33],0.491240657135877,0.491240657135877,single_rep_count
+pull_up/pull_up_034.json,pull_up,7,"[10, 16, 23, 30, 37, 44, 61]",0.7536307269764704,0.5092241488998155,edge_time_point;high_rep_count;close_time_points
+pull_up/pull_up_034_aug_73_flip.json,pull_up,7,"[10, 16, 23, 30, 37, 44, 61]",0.7540591014283246,0.510019141280662,edge_time_point;high_rep_count;close_time_points
+pull_up/pull_up_034_aug_89_flip.json,pull_up,7,"[10, 16, 23, 30, 37, 44, 61]",0.7540591014283246,0.510019141280662,edge_time_point;high_rep_count;close_time_points
+pull_up/pull_up_036.json,pull_up,5,"[17, 25, 32, 49, 61]",0.5493273633589631,0.3946488781585367,edge_time_point
+pull_up/pull_up_037.json,pull_up,3,"[36, 42, 54]",0.7332289179619491,0.49584096735899097,close_time_points
+pull_up/pull_up_038.json,pull_up,5,"[1, 14, 21, 34, 46]",0.6268302951275853,0.47665781382776184,edge_time_point
+pull_up/pull_up_040.json,pull_up,5,"[2, 8, 20, 31, 53]",0.5339629653927286,0.377248867223296,edge_time_point;close_time_points
+pull_up/pull_up_040_aug_57_noise.json,pull_up,5,"[2, 14, 20, 31, 53]",0.5274997113087772,0.3449860094188639,edge_time_point;close_time_points
+pull_up/pull_up_040_aug_88_flip.json,pull_up,5,"[2, 8, 20, 31, 53]",0.5336920047490177,0.37545019114282047,edge_time_point;close_time_points
+pull_up/pull_up_041.json,pull_up,1,[60],0.7570137865293889,0.7570137865293889,single_rep_count
+pull_up/pull_up_041_aug_20_speed.json,pull_up,1,[60],0.653478987342856,0.653478987342856,single_rep_count
+pull_up/pull_up_042_aug_118_flip.json,pull_up,3,"[7, 22, 56]",0.5670304650276771,0.23851509373728047,low_motion_peak
+pull_up/pull_up_045.json,pull_up,5,"[1, 24, 40, 50, 58]",0.3626603012771477,0.22060927633183994,edge_time_point;low_motion_peak
+pull_up/pull_up_045_aug_5_noise.json,pull_up,5,"[1, 24, 40, 50, 58]",0.44549134052055467,0.335791203408585,edge_time_point
+pull_up/pull_up_046.json,pull_up,1,[5],0.4025374615747741,0.4025374615747741,single_rep_count
+pull_up/pull_up_047_aug_19_noise.json,pull_up,3,"[11, 17, 47]",0.6788065282100274,0.5787248662379674,close_time_points
+pull_up/pull_up_048.json,pull_up,3,"[37, 51, 61]",0.7411126444422114,0.3361771983661905,edge_time_point
+pull_up/pull_up_049_aug_51_speed.json,pull_up,4,"[2, 36, 46, 56]",0.8116375886160372,0.43176674014703,edge_time_point
+pull_up/pull_up_049_aug_65_speed.json,pull_up,4,"[2, 36, 46, 56]",0.8116375886160372,0.43176674014703,edge_time_point
+pull_up/pull_up_050.json,pull_up,1,[48],0.6737051654274008,0.6737051654274008,single_rep_count
+pull_up/pull_up_051.json,pull_up,3,"[10, 16, 49]",0.5820429474972392,0.24789374247730045,low_motion_peak;close_time_points
+pull_up/pull_up_051_aug_13_flip.json,pull_up,3,"[10, 16, 49]",0.6059095997103459,0.24626373719622185,low_motion_peak;close_time_points
+pull_up/pull_up_053_aug_117_noise.json,pull_up,6,"[9, 17, 26, 36, 42, 48]",0.8594765234045697,0.6315857642503736,close_time_points
+pull_up/pull_up_054.json,pull_up,2,"[21, 59]",0.5438958896334725,0.21928155014510503,low_motion_peak
+pull_up/pull_up_054_aug_11_flip.json,pull_up,2,"[21, 59]",0.5475868468001979,0.21441729007561544,low_motion_peak
+pull_up/pull_up_055.json,pull_up,5,"[22, 31, 39, 45, 59]",0.7907045417525174,0.6048901651291422,close_time_points
+pull_up/pull_up_055_aug_110_flip.json,pull_up,5,"[22, 31, 39, 45, 59]",0.7780153584118259,0.5977321362323356,close_time_points
+pull_up/pull_up_057.json,pull_up,4,"[28, 38, 51, 61]",0.9298025651968734,0.7124845241963917,edge_time_point
+pull_up/pull_up_059.json,pull_up,1,[34],0.5849206365184342,0.5849206365184342,single_rep_count
+pull_up/pull_up_062.json,pull_up,4,"[3, 11, 25, 31]",0.657891354208099,0.45017248647018393,close_time_points
+pull_up/pull_up_063.json,pull_up,5,"[1, 28, 42, 53, 60]",0.4040000870383449,0.21560199468698665,edge_time_point;low_motion_peak
+pull_up/pull_up_063_aug_36_flip.json,pull_up,5,"[1, 28, 42, 53, 60]",0.4039667752967111,0.21550584931038583,edge_time_point;low_motion_peak
+pull_up/pull_up_066.json,pull_up,3,"[2, 16, 61]",0.5738839745510131,0.19353992550399948,edge_time_point;low_motion_peak
+pull_up/pull_up_066_aug_35_noise.json,pull_up,2,"[16, 62]",0.5919582883613959,0.46879182418828663,edge_time_point
+pull_up/pull_up_066_aug_93_speed.json,pull_up,3,"[2, 16, 61]",0.5703821323513346,0.1731822868707657,edge_time_point;low_motion_peak
+pull_up/pull_up_067.json,pull_up,5,"[2, 19, 30, 39, 48]",0.5373108048245366,0.33573181651645767,edge_time_point
+pull_up/pull_up_068.json,pull_up,3,"[11, 40, 62]",0.718268299404461,0.3319328210938604,edge_time_point
+pull_up/pull_up_068_aug_16_speed.json,pull_up,3,"[11, 41, 62]",0.6802669433415184,0.2809874610223481,edge_time_point
+pull_up/pull_up_069.json,pull_up,3,"[15, 50, 56]",0.651577950956372,0.30589742466546693,close_time_points
+pull_up/pull_up_069_aug_33_noise.json,pull_up,3,"[18, 50, 56]",0.63151755615224,0.221046956556666,low_motion_peak;close_time_points
+pull_up/pull_up_070.json,pull_up,1,[10],0.7445910501214692,0.7445910501214692,single_rep_count
+pull_up/pull_up_071_aug_37_speed.json,pull_up,2,"[22, 29]",0.566737097117527,0.2202279842302752,low_motion_peak
+pull_up/pull_up_071_aug_82_speed.json,pull_up,2,"[22, 29]",0.566737097117527,0.2202279842302752,low_motion_peak
+pull_up/pull_up_072.json,pull_up,5,"[4, 10, 20, 32, 38]",0.6278093871003818,0.2935031311426036,close_time_points
+pull_up/pull_up_072_aug_102_noise.json,pull_up,5,"[2, 10, 20, 32, 38]",0.6492705719764106,0.39660124085583964,edge_time_point;close_time_points
+pull_up/pull_up_074_aug_120_noise.json,pull_up,4,"[7, 16, 41, 48]",0.5911721399608062,0.23300520205435343,low_motion_peak
+pull_up/pull_up_076.json,pull_up,1,[59],0.7916203906337875,0.7916203906337875,single_rep_count
+pull_up/pull_up_078.json,pull_up,3,"[2, 32, 46]",0.7270746483800538,0.42259085305354777,edge_time_point
+pull_up/pull_up_079.json,pull_up,4,"[23, 33, 51, 57]",0.6913626001283538,0.5126403941069986,close_time_points
+pull_up/pull_up_079_aug_119_speed.json,pull_up,4,"[23, 33, 51, 57]",0.6980521333332051,0.5211671117701913,close_time_points
+pull_up/pull_up_079_aug_83_noise.json,pull_up,4,"[23, 33, 51, 57]",0.7219412403009782,0.5785172818741217,close_time_points
+pull_up/pull_up_079_aug_95_flip.json,pull_up,4,"[23, 33, 51, 62]",0.6994244776749141,0.48842406885064105,edge_time_point
+pull_up/pull_up_080_aug_113_speed.json,pull_up,2,"[11, 30]",0.6093335811763118,0.21305818847775657,low_motion_peak
+pull_up/pull_up_080_aug_91_noise.json,pull_up,6,"[11, 25, 31, 37, 51, 61]",0.6494535029926211,0.3931061219811687,edge_time_point;close_time_points
+pull_up/pull_up_081.json,pull_up,5,"[2, 22, 31, 37, 50]",0.5488158241509289,0.3993493466532609,edge_time_point;close_time_points
+pull_up/pull_up_082_aug_97_speed.json,pull_up,6,"[8, 18, 32, 43, 55, 61]",0.8100189965212257,0.48302321264985215,edge_time_point;close_time_points
+pull_up/pull_up_083.json,pull_up,3,"[34, 41, 48]",0.5797322106694742,0.23150771907489429,low_motion_peak
+pull_up/pull_up_085_aug_101_speed.json,pull_up,5,"[3, 9, 19, 34, 45]",0.618743036255367,0.4087584190680328,close_time_points
+pull_up/pull_up_085_aug_52_speed.json,pull_up,5,"[3, 9, 19, 34, 45]",0.618743036255367,0.4087584190680328,close_time_points
+pull_up/pull_up_088.json,pull_up,1,[21],0.5524875580137261,0.5524875580137261,single_rep_count
+pull_up/pull_up_088_aug_17_noise.json,pull_up,1,[21],0.5662942781134702,0.5662942781134702,single_rep_count
+pull_up/pull_up_091.json,pull_up,3,"[1, 48, 54]",0.3995247306784499,0.1700969973970447,edge_time_point;low_motion_peak;close_time_points
+pull_up/pull_up_092.json,pull_up,4,"[1, 11, 25, 36]",0.6263786076625916,0.4164363046872915,edge_time_point
+pull_up/pull_up_092_aug_40_flip.json,pull_up,4,"[2, 11, 25, 36]",0.6935023686149412,0.4466037258844298,edge_time_point
+pull_up/pull_up_093_aug_74_flip.json,pull_up,4,"[13, 24, 39, 45]",0.8052321229597982,0.6574961663251495,close_time_points
+pull_up/pull_up_094_person1.json,pull_up,3,"[2, 9, 49]",0.6522652478222959,0.2510213200119737,edge_time_point
+pull_up/pull_up_096_person1.json,pull_up,2,"[8, 45]",0.5468616220416717,0.24163957558467675,low_motion_peak
+pull_up/pull_up_097_person1.json,pull_up,1,[2],0.6657226818199313,0.6657226818199313,edge_time_point;single_rep_count
+pull_up/pull_up_098_person2_aug_21_noise.json,pull_up,3,"[13, 19, 29]",0.5529251243802528,0.27576244525031485,close_time_points
+pull_up/pull_up_099_person2_aug_72_flip.json,pull_up,4,"[18, 29, 39, 45]",0.592751248343402,0.3108717379661599,close_time_points
+pull_up/pull_up_100_person3.json,pull_up,7,"[4, 11, 21, 27, 39, 45, 60]",0.7580790779223369,0.6361222284842785,high_rep_count;close_time_points
+pull_up/pull_up_100_person3_aug_0_speed.json,pull_up,7,"[4, 11, 21, 27, 39, 45, 60]",0.7461712772078819,0.6332681296600621,high_rep_count;close_time_points
+pull_up/pull_up_101_person3.json,pull_up,3,"[1, 27, 49]",0.3900356573369607,0.21995652600040505,edge_time_point;low_motion_peak
+pull_up/pull_up_101_person3_aug_48_flip.json,pull_up,3,"[1, 27, 49]",0.39020688286575855,0.2199612689573384,edge_time_point;low_motion_peak
+pull_up/pull_up_103_person3.json,pull_up,5,"[7, 29, 35, 50, 56]",0.7967066906540746,0.5154931105976558,close_time_points
+pull_up/pull_up_103_person3_aug_1_flip.json,pull_up,4,"[7, 29, 35, 50]",0.7967682521589201,0.5175480163526892,close_time_points
+pull_up/pull_up_103_person3_aug_75_noise.json,pull_up,4,"[7, 29, 35, 50]",0.8246928565608832,0.5306523193334762,close_time_points
+pull_up/pull_up_105_person3.json,pull_up,1,[63],0.34795155936245914,0.34795155936245914,edge_time_point;single_rep_count
+pull_up/pull_up_105_person3_aug_49_speed.json,pull_up,6,"[2, 8, 16, 30, 45, 60]",0.7663542121059134,0.5943353626074874,edge_time_point;close_time_points
+pull_up/pull_up_105_person3_aug_98_noise.json,pull_up,1,[63],0.3455020402915213,0.3455020402915213,edge_time_point;single_rep_count
+pull_up/pull_up_106_person3.json,pull_up,4,"[1, 15, 33, 50]",0.3996260627597025,0.23074938986672638,edge_time_point;low_motion_peak
+pull_up/pull_up_108_person3.json,pull_up,5,"[5, 20, 38, 44, 54]",0.7161873981184771,0.5336671964275703,close_time_points
+pull_up/pull_up_111_person5.json,pull_up,6,"[1, 10, 16, 22, 33, 40]",0.40752058071832487,0.25831974822204257,edge_time_point;close_time_points
+pull_up/pull_up_115_person5.json,pull_up,3,"[2, 26, 52]",0.5580967264758431,0.26868316672383274,edge_time_point
+pull_up/pull_up_116_person5.json,pull_up,1,[7],0.7294934245644564,0.7294934245644564,single_rep_count
+pull_up/pull_up_117_person6.json,pull_up,3,"[9, 15, 56]",0.4695355413932039,0.23838950473093146,low_motion_peak;close_time_points
+pull_up/pull_up_118_person6.json,pull_up,3,"[3, 42, 61]",0.6427663259947797,0.2225059050997216,edge_time_point;low_motion_peak
+pull_up/pull_up_119_person7.json,pull_up,1,[2],0.5237903762499649,0.5237903762499649,edge_time_point;single_rep_count
+pull_up/pull_up_119_person7_aug_24_speed.json,pull_up,1,[2],0.5202481620151085,0.5202481620151085,edge_time_point;single_rep_count
+pull_up/pull_up_122_person7.json,pull_up,1,[21],0.7227281859203096,0.7227281859203096,single_rep_count
+pull_up/pull_up_122_person7_aug_111_flip.json,pull_up,1,[21],0.7255438933418727,0.7255438933418727,single_rep_count
+pull_up/pull_up_123_person8.json,pull_up,2,"[13, 42]",0.5862711568464698,0.15791403308666127,low_motion_peak
+pull_up/pull_up_124_person8.json,pull_up,4,"[13, 25, 37, 43]",0.6275938539736844,0.32836408724987776,close_time_points
+pull_up/pull_up_124_person8_aug_34_noise.json,pull_up,5,"[13, 19, 25, 37, 43]",0.6321963001531224,0.2952669599821258,close_time_points
+pull_up/pull_up_126_person8.json,pull_up,6,"[5, 15, 22, 32, 47, 61]",0.6826588830122903,0.5440678652390709,edge_time_point
+pull_up/pull_up_127_person9.json,pull_up,6,"[2, 9, 15, 27, 35, 58]",0.6525760571767394,0.513711934751902,edge_time_point;close_time_points
+pull_up/pull_up_127_person9_aug_25_flip.json,pull_up,6,"[2, 9, 15, 27, 35, 58]",0.6552655668454002,0.5228098218808399,edge_time_point;close_time_points
+pull_up/pull_up_127_person9_aug_68_speed.json,pull_up,6,"[2, 9, 15, 27, 35, 58]",0.6661861529375492,0.5072222278041825,edge_time_point;close_time_points
+push_up/push_up_001.json,push_up,5,"[3, 18, 35, 46, 61]",0.7438583656142042,0.42814135011804655,edge_time_point
+push_up/push_up_002.json,push_up,1,[2],0.5861412931604176,0.5861412931604176,edge_time_point;single_rep_count
+push_up/push_up_003.json,push_up,3,"[7, 55, 61]",0.6297071628297765,0.41762587773451176,edge_time_point;close_time_points
+push_up/push_up_004.json,push_up,1,[5],0.729307547522513,0.729307547522513,single_rep_count
+push_up/push_up_006.json,push_up,2,"[48, 62]",0.8609536018254346,0.3095602527948059,edge_time_point
+push_up/push_up_007.json,push_up,1,[38],0.6740411685770152,0.6740411685770152,single_rep_count
+push_up/push_up_010.json,push_up,4,"[2, 25, 44, 55]",0.5479910303524154,0.2150464799437345,edge_time_point;low_motion_peak
+push_up/push_up_011.json,push_up,6,"[6, 13, 22, 28, 45, 59]",0.7408367823824024,0.6902068339002425,close_time_points
+push_up/push_up_012.json,push_up,2,"[52, 59]",0.5496134771176309,0.22349710310403775,low_motion_peak
+push_up/push_up_013.json,push_up,3,"[1, 42, 52]",0.3611315841386579,0.22718118158470457,edge_time_point;low_motion_peak
+push_up/push_up_014.json,push_up,5,"[11, 18, 24, 35, 50]",0.8542203435662151,0.6342102220659331,close_time_points
+push_up/push_up_015.json,push_up,7,"[1, 16, 33, 39, 46, 52, 59]",0.4254055701290632,0.3202070684968012,edge_time_point;high_rep_count;close_time_points
+push_up/push_up_017.json,push_up,2,"[6, 13]",0.6221946339875315,0.15501778254225154,low_motion_peak
+push_up/push_up_021.json,push_up,2,"[1, 62]",0.47638873020830824,0.18823907400755752,edge_time_point;low_motion_peak
+push_up/push_up_022.json,push_up,2,"[2, 60]",0.5910538610464665,0.3628724638598516,edge_time_point
+push_up/push_up_023.json,push_up,1,[24],0.6480072469764899,0.6480072469764899,single_rep_count
+push_up/push_up_026.json,push_up,2,"[14, 20]",0.6855653329641304,0.558620787443532,close_time_points
+push_up/push_up_027.json,push_up,7,"[3, 13, 19, 28, 34, 43, 49]",0.703495015995162,0.4952609890623192,high_rep_count;close_time_points
+push_up/push_up_030.json,push_up,2,"[40, 46]",0.6488862133405175,0.27101471054775866,close_time_points
+push_up/push_up_032.json,push_up,4,"[6, 35, 49, 55]",0.6338872101052171,0.3966967830496193,close_time_points
+push_up/push_up_033.json,push_up,3,"[2, 8, 42]",0.470040637649151,0.18220753210599888,edge_time_point;low_motion_peak;close_time_points
+push_up/push_up_034.json,push_up,6,"[1, 16, 25, 33, 52, 62]",0.4895865684258748,0.35001297895857464,edge_time_point
+push_up/push_up_035.json,push_up,1,[56],0.4948682589460423,0.4948682589460423,single_rep_count
+push_up/push_up_037.json,push_up,4,"[13, 30, 40, 57]",0.44264215712814686,0.20263246115493916,low_motion_peak
+push_up/push_up_038.json,push_up,5,"[6, 14, 35, 49, 55]",0.6652398266523848,0.5172571525313842,close_time_points
+push_up/push_up_040.json,push_up,4,"[1, 18, 25, 39]",0.640799167702839,0.26239705415604647,edge_time_point
+push_up/push_up_041.json,push_up,3,"[1, 7, 26]",0.3656863451322776,0.19906079733736604,edge_time_point;low_motion_peak;close_time_points
+push_up/push_up_042.json,push_up,2,"[1, 45]",0.3740068515438238,0.21161187790260608,edge_time_point;low_motion_peak
+push_up/push_up_045.json,push_up,6,"[2, 8, 19, 38, 47, 60]",0.5592368429338205,0.44458421049869606,edge_time_point;close_time_points
+push_up/push_up_047.json,push_up,1,[2],0.596613752970134,0.596613752970134,edge_time_point;single_rep_count
+push_up/push_up_052.json,push_up,6,"[2, 24, 35, 46, 52, 58]",0.5218748828147513,0.44198404768075344,edge_time_point;close_time_points
+push_up/push_up_053.json,push_up,4,"[9, 26, 50, 58]",0.6585733732989243,0.22617290283793115,low_motion_peak
+push_up/push_up_054.json,push_up,1,[17],0.5940553870076076,0.5940553870076076,single_rep_count
+push_up/push_up_056.json,push_up,5,"[1, 9, 16, 54, 61]",0.4949298723609995,0.2850787399788979,edge_time_point
+push_up/push_up_057.json,push_up,1,[36],0.4791224438200583,0.4791224438200583,single_rep_count
+push_up/push_up_060.json,push_up,5,"[9, 25, 36, 44, 62]",0.5799726850154407,0.459167338321275,edge_time_point
+push_up/push_up_065.json,push_up,4,"[4, 11, 17, 39]",0.7837463096378583,0.6295222363545214,close_time_points
+push_up/push_up_066.json,push_up,2,"[2, 20]",0.5751537390918211,0.2733096169080877,edge_time_point
+push_up/push_up_067.json,push_up,6,"[2, 9, 20, 30, 41, 51]",0.4421539185944482,0.3805682769044978,edge_time_point
+push_up/push_up_068.json,push_up,5,"[2, 8, 19, 27, 51]",0.6062255348787998,0.32817261916868984,edge_time_point;close_time_points
+push_up/push_up_069.json,push_up,6,"[1, 31, 37, 46, 52, 58]",0.3603832378563124,0.22911610656025638,edge_time_point;low_motion_peak;close_time_points
+push_up/push_up_072.json,push_up,1,[2],0.598127420505963,0.598127420505963,edge_time_point;single_rep_count
+push_up/push_up_073.json,push_up,5,"[7, 13, 21, 38, 61]",0.8880400844961508,0.5176928084642659,edge_time_point;close_time_points
+push_up/push_up_074.json,push_up,1,[60],0.5200099534269385,0.5200099534269385,single_rep_count
+push_up/push_up_075.json,push_up,4,"[12, 19, 39, 58]",0.4255102249861282,0.2464000349412145,low_motion_peak
+push_up/push_up_077.json,push_up,1,[43],0.5340411273300419,0.5340411273300419,single_rep_count
+push_up/push_up_078.json,push_up,4,"[5, 11, 18, 24]",0.8436370763265305,0.6871180459267171,close_time_points
+push_up/push_up_079.json,push_up,5,"[2, 11, 26, 37, 45]",0.627090093351689,0.4880964939219488,edge_time_point
+push_up/push_up_080.json,push_up,5,"[12, 18, 27, 33, 57]",0.7955462761952988,0.6091712010474772,close_time_points
+push_up/push_up_081.json,push_up,2,"[42, 51]",0.5764398901959666,0.24990602833088546,low_motion_peak
+push_up/push_up_085.json,push_up,2,"[7, 23]",0.6804552193755039,0.24531831669572426,low_motion_peak
+push_up/push_up_086.json,push_up,2,"[1, 38]",0.3528358473554116,0.23030470626515664,edge_time_point;low_motion_peak
+push_up/push_up_087.json,push_up,4,"[5, 35, 42, 48]",0.5701122722672164,0.2388376136681527,low_motion_peak;close_time_points
+push_up/push_up_089.json,push_up,1,[2],0.5908000094646298,0.5908000094646298,edge_time_point;single_rep_count
+push_up/push_up_090.json,push_up,3,"[8, 14, 62]",0.6071073309438995,0.2674850059519789,edge_time_point;close_time_points
+push_up/push_up_091.json,push_up,5,"[2, 12, 24, 32, 54]",0.4879905209884235,0.4422069679783569,edge_time_point
+push_up/push_up_092.json,push_up,4,"[2, 9, 15, 50]",0.6625765187607847,0.3886568547598488,edge_time_point;close_time_points
+push_up/push_up_093.json,push_up,3,"[36, 46, 55]",0.5924317135055498,0.2199519510047608,low_motion_peak
+push_up/push_up_095.json,push_up,3,"[29, 48, 56]",0.5927673441525971,0.23754509081716954,low_motion_peak
+push_up/push_up_097.json,push_up,4,"[2, 15, 29, 57]",0.5810462665027083,0.3886650509517247,edge_time_point
+push_up/push_up_098.json,push_up,3,"[21, 27, 57]",0.5729159574133702,0.20787195389520238,low_motion_peak;close_time_points
+push_up/push_up_099.json,push_up,2,"[2, 29]",0.6695229736601371,0.34519599969206577,edge_time_point
+push_up/push_up_100.json,push_up,4,"[10, 28, 49, 62]",0.5501175371335619,0.3370684742119247,edge_time_point
+push_up/push_up_105.json,push_up,3,"[2, 27, 47]",0.5904284524128265,0.23995921350706953,edge_time_point;low_motion_peak
+push_up/push_up_107.json,push_up,2,"[9, 44]",0.52384299974416,0.1954853448271914,low_motion_peak
+push_up/push_up_109.json,push_up,1,[0],0.0,0.0,edge_time_point;single_rep_count;low_motion_peak
+push_up/push_up_110.json,push_up,4,"[11, 22, 37, 46]",0.5397802274038542,0.2388759902058852,low_motion_peak
+push_up/push_up_111.json,push_up,5,"[1, 10, 21, 45, 54]",0.37958666998003887,0.21108785266169075,edge_time_point;low_motion_peak
+push_up/push_up_112.json,push_up,5,"[2, 28, 35, 45, 57]",0.7594888297687447,0.44015730493093846,edge_time_point
+push_up/push_up_113.json,push_up,4,"[3, 10, 50, 62]",0.5629123678929957,0.2809352177279457,edge_time_point
+push_up/push_up_115.json,push_up,5,"[3, 18, 35, 46, 62]",0.7493041715141354,0.4343198368893081,edge_time_point
+push_up/push_up_118.json,push_up,3,"[1, 13, 54]",0.40069463456766075,0.284334197287995,edge_time_point
+push_up/push_up_119.json,push_up,4,"[5, 25, 31, 38]",0.6195466301254456,0.48984781628854407,close_time_points
+push_up/push_up_120.json,push_up,1,[0],0.0,0.0,edge_time_point;single_rep_count;low_motion_peak
+push_up/push_up_122.json,push_up,2,"[18, 35]",0.5209891274905288,0.1739871825876298,low_motion_peak
+push_up/push_up_123.json,push_up,4,"[15, 34, 52, 58]",0.7728418859198987,0.6277646803719087,close_time_points
+push_up/push_up_124.json,push_up,5,"[2, 16, 26, 35, 44]",0.46873653796909354,0.34426331796701465,edge_time_point
+push_up/push_up_125.json,push_up,3,"[22, 36, 52]",0.5299867709347316,0.20206557021574856,low_motion_peak
+push_up/push_up_126.json,push_up,3,"[2, 9, 24]",0.6894547884484389,0.410590452876751,edge_time_point
+push_up/push_up_128.json,push_up,5,"[12, 18, 30, 45, 55]",0.5759731723115283,0.38891176555324336,close_time_points
+push_up/push_up_129.json,push_up,2,"[5, 33]",0.5470158825982733,0.2239011422314785,low_motion_peak
+push_up/push_up_130.json,push_up,6,"[1, 8, 15, 25, 41, 61]",0.4582553963980105,0.31207486860458933,edge_time_point
+push_up/push_up_131.json,push_up,4,"[1, 12, 46, 55]",0.456444006076298,0.369596166583485,edge_time_point
+push_up/push_up_133.json,push_up,3,"[2, 14, 27]",0.5204124185183481,0.22492791170657123,edge_time_point;low_motion_peak
+push_up/push_up_134.json,push_up,5,"[3, 18, 35, 46, 61]",0.7579111391276602,0.44103628581107185,edge_time_point
+push_up/push_up_135.json,push_up,6,"[3, 14, 20, 35, 46, 61]",0.6650685910626571,0.5519152684041998,edge_time_point;close_time_points
+push_up/push_up_136.json,push_up,1,[35],0.6069276157083318,0.6069276157083318,single_rep_count
+push_up/push_up_137.json,push_up,2,"[24, 30]",0.3450662673264343,0.1531102878835626,low_motion_peak;close_time_points
+push_up/push_up_138.json,push_up,5,"[2, 11, 25, 33, 44]",0.4455434434726361,0.23089230778719172,edge_time_point;low_motion_peak
+push_up/push_up_139.json,push_up,5,"[4, 15, 21, 35, 61]",0.5956153741567052,0.4176816350051482,edge_time_point;close_time_points
+push_up/push_up_140.json,push_up,5,"[3, 18, 35, 46, 62]",0.7485775625819997,0.43102343009019006,edge_time_point
+push_up/push_up_141.json,push_up,4,"[26, 32, 38, 49]",0.604977797545865,0.5489722449268204,close_time_points
+push_up/push_up_142.json,push_up,1,[27],0.5805346151692183,0.5805346151692183,single_rep_count
+push_up/push_up_143.json,push_up,1,[33],0.589336264592339,0.589336264592339,single_rep_count
+push_up/push_up_146.json,push_up,5,"[15, 26, 39, 49, 61]",0.6652772643699596,0.47946059653836387,edge_time_point
+push_up/push_up_149.json,push_up,3,"[6, 28, 51]",0.5539898984901062,0.22079432226171725,low_motion_peak
+push_up/push_up_150.json,push_up,5,"[13, 21, 27, 41, 56]",0.858739513604837,0.6297123234357156,close_time_points
+push_up/push_up_151.json,push_up,1,[23],0.5472336878330881,0.5472336878330881,single_rep_count
+push_up/push_up_152.json,push_up,1,[4],0.5527220128595196,0.5527220128595196,single_rep_count
+push_up/push_up_153.json,push_up,4,"[2, 13, 29, 61]",0.48851193185242103,0.31328602024120594,edge_time_point
+push_up/push_up_156.json,push_up,5,"[2, 11, 24, 34, 58]",0.703174569841822,0.5564911311013273,edge_time_point
+push_up/push_up_158.json,push_up,5,"[2, 18, 33, 45, 54]",0.6056001860661193,0.3252898758965862,edge_time_point
+push_up/push_up_164.json,push_up,5,"[1, 21, 39, 46, 56]",0.4054051656913408,0.24423641857526904,edge_time_point;low_motion_peak
+push_up/push_up_166.json,push_up,5,"[1, 28, 36, 45, 53]",0.41244103514256,0.2599400371144468,edge_time_point
+push_up/push_up_167.json,push_up,5,"[14, 23, 32, 47, 53]",0.5436254495000079,0.32129145379290974,close_time_points
+push_up/push_up_168.json,push_up,4,"[2, 34, 41, 52]",0.5526922059573287,0.24899264399625967,edge_time_point;low_motion_peak
+push_up/push_up_170.json,push_up,3,"[4, 12, 37]",0.5981496208900374,0.22757817100655092,low_motion_peak
+push_up/push_up_171.json,push_up,3,"[10, 19, 32]",0.6035865818707634,0.2441877949114956,low_motion_peak
+push_up/push_up_172.json,push_up,4,"[3, 15, 45, 51]",0.7343168652378989,0.4041906461417662,close_time_points
+push_up/push_up_174.json,push_up,3,"[15, 26, 51]",0.5551791825499572,0.2287290444514198,low_motion_peak
+push_up/push_up_176.json,push_up,1,[23],0.5902447179609117,0.5902447179609117,single_rep_count
+push_up/push_up_177.json,push_up,2,"[33, 43]",0.602261091889612,0.15224825856150273,low_motion_peak
+push_up/push_up_179.json,push_up,1,[29],0.7371301101370915,0.7371301101370915,single_rep_count
+push_up/push_up_180.json,push_up,3,"[2, 12, 21]",0.5549066750695306,0.3150714757526444,edge_time_point
+push_up/push_up_181.json,push_up,4,"[16, 26, 38, 52]",0.6085228474913582,0.23350900398386218,low_motion_peak
+push_up/push_up_182.json,push_up,5,"[2, 9, 40, 50, 56]",0.7582892947465285,0.6216403572464364,edge_time_point;close_time_points
+push_up/push_up_184.json,push_up,1,[48],0.5444510264029838,0.5444510264029838,single_rep_count
+push_up/push_up_185.json,push_up,2,"[1, 31]",0.3581278786559359,0.2736115265082996,edge_time_point
+push_up/push_up_186.json,push_up,1,[43],0.6016169321113919,0.6016169321113919,single_rep_count
+push_up/push_up_187.json,push_up,4,"[2, 9, 22, 36]",0.6000174866475143,0.4646610290298864,edge_time_point
+push_up/push_up_189.json,push_up,2,"[1, 58]",0.437417766860829,0.26959789735755657,edge_time_point
+push_up/push_up_190_person1.json,push_up,5,"[13, 21, 27, 42, 54]",0.595873157890624,0.3754718853947875,close_time_points
+push_up/push_up_192.json,push_up,5,"[8, 18, 37, 50, 61]",0.7415055961146725,0.4168013140577345,edge_time_point
+push_up/push_up_193_person2.json,push_up,1,[31],0.5695436259783007,0.5695436259783007,single_rep_count
+push_up/push_up_194_person2.json,push_up,1,[1],0.41400817793730355,0.41400817793730355,edge_time_point;single_rep_count
+push_up/push_up_195_person3.json,push_up,5,"[10, 16, 26, 33, 40]",0.7302498878453072,0.5010549877844408,close_time_points
+push_up/push_up_196_person3.json,push_up,4,"[1, 12, 21, 35]",0.48729837673964566,0.3091302332088985,edge_time_point
+push_up/push_up_197_person3.json,push_up,4,"[2, 30, 46, 59]",0.7147329689976337,0.593288947900895,edge_time_point
+push_up/push_up_198_person3.json,push_up,5,"[10, 18, 31, 41, 56]",0.4804863050927544,0.24469085908820545,low_motion_peak
+push_up/push_up_200_person3.json,push_up,1,[16],0.648268896513144,0.648268896513144,single_rep_count
+push_up/push_up_203_person3.json,push_up,5,"[1, 17, 28, 42, 53]",0.374419561319805,0.1638213626483442,edge_time_point;low_motion_peak
+push_up/push_up_205_person3.json,push_up,1,[2],0.5772463955535883,0.5772463955535883,edge_time_point;single_rep_count
+push_up/push_up_206_person3.json,push_up,5,"[8, 25, 33, 53, 62]",0.56437578247868,0.32924551663032436,edge_time_point
+push_up/push_up_208_person3.json,push_up,4,"[7, 17, 33, 61]",0.6736177588302862,0.5045330648708177,edge_time_point
+push_up/push_up_209_person3.json,push_up,5,"[2, 10, 25, 31, 52]",0.4713061679350887,0.22930483697556428,edge_time_point;low_motion_peak;close_time_points
+push_up/push_up_210_person3.json,push_up,5,"[2, 17, 31, 46, 61]",0.6048834970799394,0.4251314612829481,edge_time_point
+push_up/push_up_212_person4.json,push_up,5,"[16, 38, 44, 51, 60]",0.6766816060529608,0.577946448389202,close_time_points
+push_up/push_up_213_person4.json,push_up,7,"[7, 19, 30, 41, 47, 53, 59]",0.6449924144816342,0.5041384415819521,high_rep_count;close_time_points
+push_up/push_up_216_person4.json,push_up,1,[2],0.7027778813081917,0.7027778813081917,edge_time_point;single_rep_count
+push_up/push_up_217_person4.json,push_up,3,"[1, 40, 51]",0.35696200765619085,0.2020041409138135,edge_time_point;low_motion_peak
+push_up/push_up_218_person4.json,push_up,1,[2],0.5369181660316251,0.5369181660316251,edge_time_point;single_rep_count
+push_up/push_up_222_person5.json,push_up,2,"[4, 20]",0.5388093846189747,0.210624955150206,low_motion_peak
+push_up/push_up_223_person5.json,push_up,1,[1],0.34435800657138,0.34435800657138,edge_time_point;single_rep_count
+push_up/push_up_224_person5.json,push_up,5,"[2, 8, 36, 54, 61]",0.6486728068818923,0.37466647029374756,edge_time_point;close_time_points
+push_up/push_up_225_person5.json,push_up,3,"[1, 30, 53]",0.555415342400371,0.18177690629329535,edge_time_point;low_motion_peak
+push_up/push_up_226_person5.json,push_up,2,"[1, 8]",0.34727624311372063,0.18224799585261509,edge_time_point;low_motion_peak
+push_up/push_up_227_person5.json,push_up,3,"[1, 11, 50]",0.6577512460461724,0.326360952947427,edge_time_point
+push_up/push_up_233_person7.json,push_up,6,"[2, 13, 23, 34, 45, 55]",0.6369665054046123,0.3623899507086676,edge_time_point
+push_up/push_up_234_person7.json,push_up,5,"[2, 25, 37, 48, 59]",0.47658734092608157,0.37559692806042977,edge_time_point
+push_up/push_up_235_person7.json,push_up,3,"[12, 28, 61]",0.5347115012775107,0.23174172714782226,edge_time_point;low_motion_peak
+push_up/push_up_236_person7.json,push_up,6,"[18, 27, 35, 44, 54, 61]",0.6852560983609665,0.4845780682839059,edge_time_point
+push_up/push_up_237_person8.json,push_up,5,"[2, 9, 27, 33, 51]",0.7515708418465632,0.5042639442688869,edge_time_point;close_time_points
+push_up/push_up_239_person8.json,push_up,4,"[2, 12, 39, 46]",0.6158510196516805,0.37567067647697805,edge_time_point
+push_up/push_up_240_person8.json,push_up,4,"[12, 31, 51, 57]",0.8287209016255954,0.4552591004141958,close_time_points
+push_up/push_up_241_person8.json,push_up,4,"[2, 15, 23, 44]",0.7936767691131329,0.4911070749243027,edge_time_point
+push_up/push_up_242_person8.json,push_up,3,"[2, 14, 38]",0.5111801943458869,0.3529397816853914,edge_time_point
+push_up/push_up_243_person8.json,push_up,4,"[1, 18, 24, 42]",0.5436445643149385,0.41704348029216476,edge_time_point;close_time_points
+push_up/push_up_244_person8.json,push_up,3,"[2, 47, 57]",0.6638900421509663,0.23266671413192985,edge_time_point;low_motion_peak
+push_up/push_up_246_person9.json,push_up,1,[4],0.6402885391431289,0.6402885391431289,single_rep_count
+push_up/push_up_247_person9.json,push_up,3,"[2, 8, 20]",0.6162055796970698,0.3721865388328564,edge_time_point;close_time_points
+push_up/push_up_248_person9.json,push_up,3,"[4, 11, 17]",0.7743664696221308,0.6311025083243204,close_time_points
+push_up/push_up_249_person9.json,push_up,4,"[6, 14, 43, 49]",0.727976875542983,0.4526299109587795,close_time_points
+push_up/push_up_250_person9.json,push_up,6,"[17, 30, 36, 42, 48, 57]",0.6362512775101299,0.6047463376249868,close_time_points
+squat/squat_001.json,squat,1,[2],0.5427917030649017,0.5427917030649017,edge_time_point;single_rep_count
+squat/squat_002.json,squat,3,"[10, 24, 36]",0.6130199817414477,0.21624606373152727,low_motion_peak
+squat/squat_003.json,squat,5,"[2, 9, 15, 38, 52]",0.6402245891875202,0.40844168915477763,edge_time_point;close_time_points
+squat/squat_004.json,squat,4,"[1, 12, 33, 61]",0.3608240612962434,0.15970746358607493,edge_time_point;low_motion_peak
+squat/squat_005.json,squat,5,"[3, 11, 18, 33, 39]",0.649985561335718,0.4616922775016487,close_time_points
+squat/squat_006.json,squat,4,"[2, 36, 47, 59]",0.5716627555297885,0.1825966267130639,edge_time_point;low_motion_peak
+squat/squat_007.json,squat,5,"[2, 16, 30, 42, 52]",0.4970948012372476,0.2636661696143641,edge_time_point
+squat/squat_008.json,squat,1,[6],0.6211042349484988,0.6211042349484988,single_rep_count
+squat/squat_009.json,squat,2,"[1, 58]",0.36166248087948333,0.17562053941576525,edge_time_point;low_motion_peak
+squat/squat_010.json,squat,5,"[1, 9, 17, 37, 55]",0.622588995995655,0.2504704275688277,edge_time_point
+squat/squat_012.json,squat,4,"[26, 36, 54, 61]",0.9350032305193416,0.6358891732484044,edge_time_point
+squat/squat_013.json,squat,3,"[1, 7, 36]",0.4255431512465873,0.2672594137342877,edge_time_point;close_time_points
+squat/squat_014.json,squat,2,"[1, 53]",0.4501273696404863,0.4387317904462229,edge_time_point
+squat/squat_015.json,squat,7,"[13, 19, 25, 36, 43, 49, 55]",0.6374940323739209,0.5369303644204949,high_rep_count;close_time_points
+squat/squat_017.json,squat,2,"[20, 26]",0.7811505274388271,0.3468323100546694,close_time_points
+squat/squat_019.json,squat,1,[8],0.5612784896157362,0.5612784896157362,single_rep_count
+squat/squat_020.json,squat,3,"[2, 51, 60]",0.5559016593839177,0.2618689690082633,edge_time_point
+squat/squat_021.json,squat,3,"[48, 55, 62]",0.7058151508475908,0.3156797159441952,edge_time_point
+squat/squat_022.json,squat,7,"[2, 9, 27, 33, 44, 50, 58]",0.6406971231887248,0.5435709341328534,edge_time_point;high_rep_count;close_time_points
+squat/squat_023.json,squat,4,"[35, 43, 52, 62]",0.7236176530460605,0.5844546884102879,edge_time_point
+squat/squat_024.json,squat,5,"[1, 14, 27, 44, 62]",0.3649988976581015,0.20198274940649746,edge_time_point;low_motion_peak
+squat/squat_025.json,squat,6,"[1, 22, 33, 40, 55, 61]",0.38298820150212465,0.22729393516658905,edge_time_point;low_motion_peak;close_time_points
+squat/squat_026.json,squat,5,"[25, 35, 41, 51, 57]",0.6367044234371987,0.5662582032170977,close_time_points
+squat/squat_027.json,squat,3,"[2, 36, 45]",0.6827491991977813,0.40605740927863665,edge_time_point
+squat/squat_028.json,squat,3,"[40, 52, 58]",0.6239501696773715,0.557359361721486,close_time_points
+squat/squat_029.json,squat,6,"[12, 20, 29, 37, 48, 54]",0.6930563963694079,0.46616788092199635,close_time_points
+squat/squat_031.json,squat,3,"[2, 23, 29]",0.5816022497012927,0.2880084328642471,edge_time_point;close_time_points
+squat/squat_033.json,squat,5,"[2, 12, 30, 47, 57]",0.5388269881318393,0.3463667274915751,edge_time_point
+squat/squat_034.json,squat,1,[61],0.7164933505195796,0.7164933505195796,edge_time_point;single_rep_count
+squat/squat_037.json,squat,1,[36],0.5758688709362035,0.5758688709362035,single_rep_count
+squat/squat_038.json,squat,2,"[37, 61]",0.711755055489809,0.31845654408912477,edge_time_point
+squat/squat_040.json,squat,4,"[22, 37, 53, 61]",0.6601059344354829,0.4491218347481574,edge_time_point
+squat/squat_041.json,squat,1,[1],0.3609411543606879,0.3609411543606879,edge_time_point;single_rep_count
+squat/squat_042.json,squat,3,"[22, 28, 47]",0.552820317805102,0.405807404778142,close_time_points
+squat/squat_043.json,squat,5,"[3, 16, 26, 32, 54]",0.7109886019126408,0.6300166837127608,close_time_points
+squat/squat_044.json,squat,2,"[2, 13]",0.52690869673875,0.25348003311210177,edge_time_point
+squat/squat_045.json,squat,4,"[29, 44, 50, 56]",0.5323950027756693,0.34195612460089864,close_time_points
+squat/squat_046.json,squat,5,"[1, 9, 15, 50, 57]",0.5567245848347162,0.38814477670139874,edge_time_point;close_time_points
+squat/squat_049.json,squat,5,"[1, 24, 31, 39, 54]",0.43262196569201966,0.2872768102064228,edge_time_point
+squat/squat_050.json,squat,4,"[3, 38, 51, 62]",0.5016194130402396,0.2678321784952977,edge_time_point
+squat/squat_052.json,squat,2,"[17, 54]",0.6670222531763735,0.23819257290070184,low_motion_peak
+squat/squat_053.json,squat,4,"[1, 10, 30, 49]",0.3813552110010654,0.23871254652901072,edge_time_point;low_motion_peak
+squat/squat_055.json,squat,4,"[2, 25, 32, 60]",0.7408980820655784,0.6134314552156892,edge_time_point
+squat/squat_056.json,squat,5,"[16, 22, 28, 41, 57]",0.606091212058667,0.37245190770590086,close_time_points
+squat/squat_057.json,squat,7,"[7, 15, 24, 32, 41, 49, 57]",0.6402463977106165,0.46421281246304147,high_rep_count
+squat/squat_058.json,squat,1,[2],0.5033093636854449,0.5033093636854449,edge_time_point;single_rep_count
+squat/squat_060.json,squat,1,[37],0.42020250969462986,0.42020250969462986,single_rep_count
+squat/squat_061.json,squat,4,"[1, 16, 33, 46]",0.6007870507627427,0.42996196747702753,edge_time_point
+squat/squat_062.json,squat,6,"[14, 20, 30, 38, 53, 60]",0.6906459467128172,0.565639249696399,close_time_points
+squat/squat_064.json,squat,8,"[1, 20, 26, 33, 40, 46, 54, 60]",0.4528796708691546,0.30676865310095064,edge_time_point;high_rep_count;close_time_points
+squat/squat_065.json,squat,5,"[3, 10, 16, 35, 60]",0.6720587154639386,0.5049894663245734,close_time_points
+squat/squat_066.json,squat,7,"[5, 13, 20, 37, 44, 51, 60]",0.6416951484323496,0.4735552584441373,high_rep_count
+squat/squat_067.json,squat,5,"[1, 10, 41, 47, 57]",0.42837275521511736,0.28339950813323633,edge_time_point;close_time_points
+squat/squat_068.json,squat,4,"[1, 40, 52, 58]",0.4041253213863767,0.2074400489834141,edge_time_point;low_motion_peak;close_time_points
+squat/squat_069.json,squat,7,"[14, 20, 28, 36, 43, 50, 57]",0.7527150916561567,0.5772760802868695,high_rep_count;close_time_points
+squat/squat_070.json,squat,6,"[1, 10, 19, 27, 46, 59]",0.38183737931541534,0.17999755929497227,edge_time_point;low_motion_peak
+squat/squat_072.json,squat,3,"[1, 15, 59]",0.4333698055495262,0.3834992699872433,edge_time_point
+squat/squat_073.json,squat,6,"[1, 17, 25, 40, 50, 58]",0.44300030802896,0.2700236244771376,edge_time_point
+squat/squat_074.json,squat,5,"[3, 19, 25, 31, 49]",0.6478102079626938,0.502614866498976,close_time_points
+squat/squat_077.json,squat,5,"[2, 21, 32, 44, 61]",0.6260876514162983,0.45015399820832463,edge_time_point
+squat/squat_084.json,squat,6,"[3, 9, 20, 26, 51, 59]",0.6135015704825665,0.4954943788612696,close_time_points
+squat/squat_085.json,squat,6,"[2, 20, 36, 44, 50, 60]",0.675854249798266,0.49843052383632974,edge_time_point;close_time_points
+squat/squat_086.json,squat,7,"[4, 11, 20, 28, 34, 40, 59]",0.6396183168023943,0.47090360758259925,high_rep_count;close_time_points
+squat/squat_087.json,squat,6,"[18, 26, 36, 43, 49, 59]",0.8024987135283279,0.5900325922047946,close_time_points
+squat/squat_088.json,squat,1,[1],0.38965673515699,0.38965673515699,edge_time_point;single_rep_count
+squat/squat_089.json,squat,7,"[3, 15, 27, 38, 45, 51, 59]",0.6531589189040616,0.586798527229491,high_rep_count;close_time_points
+squat/squat_091.json,squat,1,[1],0.357667210644341,0.357667210644341,edge_time_point;single_rep_count
+squat/squat_092.json,squat,5,"[4, 16, 33, 39, 59]",0.49926352624684955,0.43972354176487943,close_time_points
+squat/squat_093.json,squat,6,"[2, 13, 20, 29, 50, 57]",0.6314397640795738,0.42297080315145635,edge_time_point
+squat/squat_094.json,squat,5,"[3, 24, 41, 48, 61]",0.6529462091938573,0.5156579886502227,edge_time_point
+squat/squat_095.json,squat,4,"[2, 22, 33, 60]",0.6765324995580416,0.6018719435765366,edge_time_point
+squat/squat_097.json,squat,6,"[4, 17, 23, 32, 48, 60]",0.7732785847550807,0.5732849044426681,close_time_points
+squat/squat_099.json,squat,4,"[2, 12, 33, 52]",0.656039420285338,0.32137969201081723,edge_time_point
+squat/squat_101.json,squat,6,"[2, 12, 23, 34, 49, 59]",0.6246362744031446,0.4594029879289085,edge_time_point
+squat/squat_102.json,squat,7,"[4, 10, 16, 31, 44, 54, 60]",0.7079749834043829,0.5219696545731013,high_rep_count;close_time_points
+squat/squat_103.json,squat,7,"[3, 10, 22, 38, 45, 54, 61]",0.49903635585055545,0.4008157187278714,edge_time_point;high_rep_count
+squat/squat_105.json,squat,5,"[15, 29, 39, 52, 58]",0.7399902298392019,0.5527913530212742,close_time_points
+squat/squat_107.json,squat,5,"[3, 25, 35, 54, 60]",0.6824319427313384,0.5228033329382276,close_time_points
+squat/squat_108.json,squat,8,"[4, 16, 22, 29, 38, 48, 54, 60]",0.6305423642873685,0.47018899879556786,high_rep_count;close_time_points
+squat/squat_109.json,squat,4,"[4, 31, 43, 58]",0.5402867397705896,0.24875692655156775,low_motion_peak
+squat/squat_110.json,squat,6,"[2, 13, 30, 36, 52, 59]",0.5098570601909922,0.37395355984668854,edge_time_point;close_time_points
+squat/squat_111.json,squat,8,"[2, 8, 14, 20, 34, 40, 47, 61]",0.6157913098799156,0.531779993055728,edge_time_point;high_rep_count;close_time_points
+squat/squat_112.json,squat,5,"[3, 21, 27, 38, 45]",0.5572825311439712,0.46529871373031384,close_time_points
+squat/squat_113.json,squat,1,[1],0.3510747966317372,0.3510747966317372,edge_time_point;single_rep_count
+squat/squat_114.json,squat,6,"[2, 17, 26, 34, 48, 60]",0.5432912764942134,0.4685099881700437,edge_time_point
+squat/squat_115.json,squat,3,"[9, 15, 46]",0.7865867411586142,0.5267082543133571,close_time_points
+squat/squat_117.json,squat,8,"[4, 12, 19, 28, 35, 43, 50, 56]",0.6353415961344754,0.4864578312717903,high_rep_count;close_time_points
+squat/squat_121.json,squat,6,"[2, 22, 28, 34, 51, 58]",0.5942963058092365,0.4862489535170199,edge_time_point;close_time_points
+squat/squat_122.json,squat,7,"[4, 11, 17, 28, 36, 46, 55]",0.646691242023853,0.4758797457330474,high_rep_count;close_time_points
+squat/squat_123.json,squat,6,"[3, 25, 32, 43, 52, 58]",0.6027858073533404,0.5324448356252488,close_time_points
+squat/squat_124.json,squat,7,"[5, 15, 21, 37, 43, 50, 60]",0.6842737981641197,0.45489114700767197,high_rep_count;close_time_points
+squat/squat_125.json,squat,7,"[3, 10, 25, 33, 45, 51, 57]",0.6541419130697195,0.5339108226631715,high_rep_count;close_time_points
+squat/squat_128.json,squat,6,"[1, 15, 33, 40, 54, 60]",0.421575170461458,0.24759324473238603,edge_time_point;low_motion_peak;close_time_points
+squat/squat_130.json,squat,1,[51],0.5915131402781295,0.5915131402781295,single_rep_count
+squat/squat_131.json,squat,5,"[15, 23, 31, 37, 50]",0.5895772650719162,0.4624416170551359,close_time_points
+squat/squat_132.json,squat,6,"[3, 11, 24, 39, 45, 56]",0.6751746649834802,0.5244697523371956,close_time_points
+squat/squat_134.json,squat,5,"[3, 26, 47, 53, 60]",0.61765251485979,0.4493380529023617,close_time_points
+squat/squat_136.json,squat,5,"[3, 9, 16, 49, 60]",0.6506419562182062,0.4483458118317574,close_time_points
+squat/squat_137.json,squat,6,"[10, 23, 29, 36, 42, 48]",0.6498102151084448,0.5029840598580472,close_time_points
+squat/squat_139.json,squat,7,"[16, 22, 31, 40, 47, 53, 60]",0.6569689806642491,0.4990802917799374,high_rep_count;close_time_points
+squat/squat_141.json,squat,6,"[3, 9, 20, 30, 45, 61]",0.771730238279979,0.5942515898297416,edge_time_point;close_time_points
+squat/squat_142.json,squat,8,"[4, 11, 17, 25, 32, 42, 49, 60]",0.6148061444033684,0.4319814589743745,high_rep_count;close_time_points
+squat/squat_145.json,squat,3,"[1, 45, 53]",0.36959224623754294,0.16649288403707568,edge_time_point;low_motion_peak
+squat/squat_147.json,squat,7,"[15, 22, 28, 36, 44, 52, 58]",0.7481798957135039,0.601720181262486,high_rep_count;close_time_points
+squat/squat_148.json,squat,8,"[3, 12, 20, 27, 37, 45, 52, 59]",0.67325323882314,0.5833819734348673,high_rep_count
+squat/squat_149.json,squat,1,[1],0.3695462224505309,0.3695462224505309,edge_time_point;single_rep_count
+squat/squat_150.json,squat,1,[1],0.3617937329629015,0.3617937329629015,edge_time_point;single_rep_count
+squat/squat_151.json,squat,4,"[1, 17, 31, 41]",0.3968553890651588,0.15942718778153,edge_time_point;low_motion_peak
+squat/squat_152.json,squat,5,"[17, 25, 38, 52, 61]",0.6578120836104907,0.6038659475844114,edge_time_point
+squat/squat_153.json,squat,7,"[3, 13, 24, 33, 39, 52, 60]",0.6518672756809222,0.5828412203855667,high_rep_count;close_time_points
+squat/squat_154.json,squat,5,"[3, 9, 38, 52, 59]",0.5882657459697879,0.4851213887297794,close_time_points
+squat/squat_155.json,squat,2,"[1, 34]",0.6021398626452448,0.3583787559997825,edge_time_point
+squat/squat_156.json,squat,8,"[3, 10, 17, 24, 33, 39, 52, 61]",0.5792501033306973,0.4727539946456579,edge_time_point;high_rep_count;close_time_points
+squat/squat_157.json,squat,1,[1],0.35464901466464993,0.35464901466464993,edge_time_point;single_rep_count
+squat/squat_158.json,squat,7,"[3, 15, 21, 28, 41, 51, 58]",0.5357354475000472,0.42464669204820404,high_rep_count;close_time_points
+squat/squat_159.json,squat,3,"[2, 37, 54]",0.5469381992095351,0.18067136101192563,edge_time_point;low_motion_peak
+squat/squat_160.json,squat,6,"[3, 12, 22, 44, 50, 61]",0.6034821420659834,0.4813078662341675,edge_time_point;close_time_points
+squat/squat_162_person1.json,squat,7,"[7, 15, 22, 32, 38, 46, 53]",0.6818675245499419,0.40599460734323295,high_rep_count;close_time_points
+squat/squat_163_person1.json,squat,8,"[4, 11, 18, 27, 34, 42, 50, 59]",0.5654214702983322,0.3683611765680432,high_rep_count
+squat/squat_164_person2.json,squat,4,"[1, 26, 47, 54]",0.6244884846100288,0.32612590186549384,edge_time_point
+squat/squat_167_person3.json,squat,1,[47],0.7267093871758863,0.7267093871758863,single_rep_count
+squat/squat_168_person4.json,squat,3,"[1, 38, 46]",0.39035648271533274,0.159081594084041,edge_time_point;low_motion_peak
+squat/squat_171_person5.json,squat,4,"[2, 21, 39, 54]",0.6229655099060363,0.5126806718023518,edge_time_point
+squat/squat_172.json,squat,3,"[1, 13, 45]",0.5543436942856681,0.37857173564399715,edge_time_point
+squat/squat_174_person6.json,squat,1,[58],0.5961283479681337,0.5961283479681337,single_rep_count
+squat/squat_175_person7.json,squat,4,"[10, 16, 22, 31]",0.6557607522919113,0.597635286342608,close_time_points
+squat/squat_176_person7.json,squat,5,"[1, 17, 26, 36, 45]",0.4936728906471922,0.3965010199058884,edge_time_point
+squat/squat_177_person8.json,squat,3,"[11, 17, 26]",0.7294301127505405,0.6143172194412412,close_time_points
+squat/squat_178_person8.json,squat,6,"[11, 18, 26, 44, 50, 56]",0.810006929425487,0.6953915473987409,close_time_points
+squat/squat_179_person9.json,squat,3,"[23, 35, 62]",0.5885080086100205,0.4789279386417989,edge_time_point
+squat/squat_180_person9.json,squat,4,"[26, 44, 52, 58]",0.9086969472626641,0.7018020669204011,close_time_points
+squat/squat_181_person10.json,squat,3,"[1, 28, 39]",0.4368218666863315,0.20306833248434744,edge_time_point;low_motion_peak
+squat/squat_182_person10.json,squat,5,"[6, 12, 23, 44, 61]",0.6916702849266654,0.3613885371332619,edge_time_point;close_time_points
+squat/squat_183_person11.json,squat,6,"[2, 10, 31, 37, 44, 53]",0.7850186561659829,0.6373428874630901,edge_time_point;close_time_points
+squat/squat_184_person11.json,squat,4,"[33, 47, 53, 59]",0.6917578365992876,0.4684123656728169,close_time_points
+squat/squat_187_person13.json,squat,5,"[3, 31, 48, 56, 62]",0.6774919633562697,0.5056343113065339,edge_time_point;close_time_points
+squat/squat_188_person13.json,squat,5,"[3, 9, 29, 46, 60]",0.591429151451397,0.5088952651318567,close_time_points
+squat/squat_190_person14.json,squat,6,"[10, 19, 25, 38, 47, 61]",0.5859148317372469,0.34688296908637356,edge_time_point;close_time_points
+squat/squat_191_person14.json,squat,5,"[4, 29, 43, 49, 62]",0.5415835855157591,0.4227267414382338,edge_time_point;close_time_points
+squat/squat_193_person14.json,squat,6,"[1, 14, 24, 31, 48, 62]",0.5972711500453306,0.3621378298737755,edge_time_point
+squat/squat_194_person15.json,squat,6,"[7, 19, 30, 38, 50, 56]",0.6137008262023883,0.5165837534948405,close_time_points
+squat/squat_196_person16.json,squat,1,[2],0.5275571113350646,0.5275571113350646,edge_time_point;single_rep_count
+squat/squat_198_person17.json,squat,4,"[4, 21, 27, 45]",0.7385091511161719,0.4412431889710057,close_time_points
+squat/squat_199_person17.json,squat,6,"[14, 31, 38, 48, 55, 62]",0.6413249128017172,0.5391559651713403,edge_time_point
+squat/squat_200_person18.json,squat,5,"[6, 12, 20, 43, 61]",0.706146547816115,0.522376450986188,edge_time_point;close_time_points
+squat/squat_201_person18.json,squat,6,"[2, 11, 18, 31, 42, 56]",0.7168988342236743,0.5620217008319168,edge_time_point
+squat/squat_202_person19.json,squat,3,"[12, 21, 27]",0.576626352958921,0.5233934041055641,close_time_points
+squat/squat_203_person19.json,squat,3,"[44, 52, 58]",0.7425982626602293,0.48593092872598403,close_time_points
+squat/squat_205_person20.json,squat,5,"[15, 23, 37, 49, 56]",0.45371388256779066,0.21754298375670672,low_motion_peak
+squat/squat_206_person20.json,squat,1,[62],0.6491570724970659,0.6491570724970659,edge_time_point;single_rep_count
+squat/squat_207_person20.json,squat,5,"[1, 27, 36, 44, 54]",0.5513498606309284,0.388028272527308,edge_time_point
+squat/squat_208_person20.json,squat,2,"[13, 31]",0.5545935428061692,0.22954061658461544,low_motion_peak
+squat/squat_209_person21.json,squat,6,"[11, 19, 29, 40, 52, 61]",0.8536898512676153,0.7087626714180837,edge_time_point
+squat/squat_211_person22.json,squat,6,"[10, 19, 25, 41, 47, 58]",0.5714556064245248,0.4137594362881574,close_time_points
+squat/squat_214_person22.json,squat,4,"[1, 25, 44, 59]",0.4074318176031329,0.17349453577670174,edge_time_point;low_motion_peak
+squat/squat_215_person22.json,squat,2,"[2, 11]",0.5384958464712071,0.4065366634983748,edge_time_point
+squat/squat_217_person22.json,squat,3,"[1, 44, 57]",0.463595456171625,0.2311477038190153,edge_time_point;low_motion_peak
+squat/squat_218_person22.json,squat,3,"[1, 16, 52]",0.41382791984785194,0.16223609992581814,edge_time_point;low_motion_peak
+squat/squat_220_person23.json,squat,2,"[53, 61]",0.5982671309641447,0.356506429655284,edge_time_point
+squat/squat_221_person23.json,squat,4,"[2, 32, 39, 62]",0.6684058528886915,0.34934811357632656,edge_time_point
+squat/squat_222_person24.json,squat,4,"[1, 12, 34, 42]",0.383999604455022,0.16078466566141705,edge_time_point;low_motion_peak
+squat/squat_223_person24.json,squat,1,[2],0.5391332416247535,0.5391332416247535,edge_time_point;single_rep_count
+squat/squat_224_person24.json,squat,5,"[23, 29, 47, 53, 61]",0.529165036713013,0.32897200748609706,edge_time_point;close_time_points
+squat/squat_225_person24.json,squat,2,"[2, 8]",0.5669248102721485,0.3492721538473188,edge_time_point;close_time_points
+squat/squat_233_person28.json,squat,4,"[15, 21, 45, 58]",0.5422845746381593,0.33554862434754723,close_time_points
+squat/squat_234_person28.json,squat,4,"[6, 32, 40, 62]",0.5972407655763139,0.41838444032527355,edge_time_point
+squat/squat_235_person28.json,squat,1,[1],0.36260060655562926,0.36260060655562926,edge_time_point;single_rep_count
+squat/squat_236_person28.json,squat,2,"[33, 54]",0.6914836994505094,0.23325210366373894,low_motion_peak
+squat/squat_237_person29.json,squat,5,"[1, 9, 38, 48, 55]",0.4549275951443218,0.3544518367453442,edge_time_point
+squat/squat_240_person30.json,squat,5,"[2, 20, 27, 54, 61]",0.5820366814404575,0.30799936185803906,edge_time_point
+squat/squat_241_person30.json,squat,4,"[7, 15, 28, 34]",0.5858610376212746,0.18572208449331018,low_motion_peak;close_time_points
+squat/squat_243_person30.json,squat,4,"[1, 19, 40, 59]",0.4499812904180762,0.33019329294527494,edge_time_point
+squat/squat_244_person30.json,squat,5,"[2, 9, 29, 35, 54]",0.6362741818446951,0.4577429161150959,edge_time_point;close_time_points
+squat/squat_247_person32.json,squat,5,"[1, 8, 23, 49, 60]",0.49851691467305026,0.41265668713221043,edge_time_point
+squat/squat_248_person32.json,squat,5,"[3, 11, 41, 47, 57]",0.7059020761580044,0.4879097835301106,close_time_points
+squat/squat_249_person33.json,squat,3,"[2, 22, 60]",0.5983380652924396,0.2233084598725947,edge_time_point;low_motion_peak
