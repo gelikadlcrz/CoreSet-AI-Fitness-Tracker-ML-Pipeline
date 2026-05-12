@@ -2,67 +2,67 @@
   "checkpoint": "checkpoint/best_stgcn_model.pth",
   "test_samples": 150,
   "classification": {
-    "accuracy": 0.68,
-    "macro_precision": 0.692770694752402,
-    "macro_recall": 0.6858411047345767,
-    "macro_f1": 0.673657689701897,
-    "macro_auc": 0.9027557226772307,
+    "accuracy": 0.76,
+    "macro_precision": 0.762629127348356,
+    "macro_recall": 0.7607578397212544,
+    "macro_f1": 0.761092283843731,
+    "macro_auc": 0.9263108884905111,
     "per_class": {
       "squat": {
-        "precision": 0.8666666666666667,
-        "recall": 0.7647058823529411,
-        "f1": 0.8125,
-        "support": 34
+        "precision": 0.7073170731707317,
+        "recall": 0.7073170731707317,
+        "f1": 0.7073170731707317,
+        "support": 41
       },
       "push_up": {
-        "precision": 0.509090909090909,
-        "recall": 0.8,
-        "f1": 0.6222222222222222,
+        "precision": 0.9393939393939394,
+        "recall": 0.8857142857142857,
+        "f1": 0.9117647058823529,
         "support": 35
       },
       "bench_press": {
-        "precision": 0.5416666666666666,
-        "recall": 0.325,
-        "f1": 0.40625,
-        "support": 40
+        "precision": 0.7674418604651163,
+        "recall": 0.75,
+        "f1": 0.7586206896551724,
+        "support": 44
       },
       "pull_up": {
-        "precision": 0.8536585365853658,
-        "recall": 0.8536585365853658,
-        "f1": 0.8536585365853658,
-        "support": 41
+        "precision": 0.6363636363636364,
+        "recall": 0.7,
+        "f1": 0.6666666666666666,
+        "support": 30
       }
     },
     "confusion_matrix": [
       [
-        26,
+        29,
+        2,
         5,
-        1,
-        2
+        5
       ],
       [
+        3,
+        31,
         0,
-        28,
-        6,
         1
       ],
       [
-        4,
-        20,
-        13,
-        3
+        5,
+        0,
+        33,
+        6
       ],
       [
-        0,
-        2,
         4,
-        35
+        0,
+        5,
+        21
       ]
     ]
   },
   "counting": {
-    "normalized_mae": 0.9333333333333333,
-    "rmse": 11.187195061021031,
-    "obo_accuracy": 0.2733333333333333
+    "normalized_mae": 1.0,
+    "rmse": 3.8113864493995706,
+    "obo_accuracy": 0.13333333333333333
   }
 }

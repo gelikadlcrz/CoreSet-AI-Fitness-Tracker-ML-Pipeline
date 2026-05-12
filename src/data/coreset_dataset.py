@@ -14,8 +14,8 @@ coordinates, serve as node attributes:
     positional coordinates, as joint angles remain stable under camera
     rotation and translation." — Methodology, Data Preprocessing
 
-This dataset reads the raw (x, y, z) world coordinates stored in the JSON
-files and computes per-frame relative joint angles inline.  The resulting
+This dataset reads the raw (x, y, z) world coordinates stored in the NPZ
+archives and computes per-frame relative joint angles inline.  The resulting
 node feature for joint j is the vector of angles formed by every triplet
 (parent, j, child) in the anatomical chain.  For joints with a single
 neighbour pair the feature is a scalar angle; for hubs (shoulder, hip) with
@@ -24,10 +24,9 @@ vector per node is produced by padding/truncating to `angle_feature_dim`.
 
 Density-map ground truth
 -------------------------
-The JSON files are expected to contain a `time_points` key whose value is a
-list of integer frame indices at which a repetition *completes* (i.e. the
-peak or valley of the movement cycle, depending on annotation convention).
-Each point becomes a normalized Gaussian bump.
+Previously calculated from JSON time_points, the density map is now pre-computed 
+and stored directly in the .npz archive. The dataset scales it dynamically 
+during temporal padding/sampling so the integral (total rep count) is preserved.
 
 Normalisation
 -------------
@@ -185,7 +184,6 @@ class CoreSetGCN_Dataset(Dataset):
            )
 
        # Get the list of relative file paths for this split
-       # e.g. ["bench_press/bench_press_094.json", ...]
        split_files = splits[split_type]
 
        for rel_path in split_files:
@@ -231,164 +229,6 @@ class CoreSetGCN_Dataset(Dataset):
        return coords_seq
 
    # ------------------------------------------------------------------
-   # Data loading and shaping
-   # ------------------------------------------------------------------
-
-   def _load_and_shape_data(self, filepath: Path) -> torch.Tensor:
-       with open(filepath, 'r') as f:
-           data = json.load(f)
-
-       # --- JSON LIST FIX ---
-       if isinstance(data, list):
-           frames_list = data
-       elif isinstance(data, dict):
-           frames_list = data.get('frames', [])
-       else:
-           frames_list = []
-
-       actual_frames = len(frames_list)
-
-       # --- Extract raw (x, y, z, v) world coordinates: shape (T, 33, 4) ---
-       coords_seq = np.zeros((actual_frames, 33, 4), dtype=np.float32)
-       for t_idx, frame in enumerate(frames_list):
-           if isinstance(frame, dict):
-               lm = frame.get('landmarks', [])
-           elif isinstance(frame, list):
-               lm = frame
-           else:
-               continue
-
-           if lm:
-               coords = []
-               for point in lm[:33]:
-                   if isinstance(point, dict):
-                       coords.append([
-                           point.get("x", 0.0),
-                           point.get("y", 0.0),
-                           point.get("z", 0.0),
-                           point.get("v", point.get("visibility", point.get("vis", 1.0)))
-                       ])
-                   else:
-                       pt = list(point[:4])
-                       if len(pt) == 3:
-                           pt.append(1.0)
-                       coords.append(pt)
-
-               arr = np.array(coords, dtype=np.float32)
-               if arr.shape == (33, 4):
-                   coords_seq[t_idx] = arr
-
-       # --- Augmentation on raw coordinates (before angle computation) ---
-       if self.augment:
-           coords_seq = self._apply_augmentations(coords_seq)
-
-       # --- Temporal sampling / padding ---
-       if self.augment and actual_frames > self.max_frames:
-           idx = np.sort(
-               np.random.choice(actual_frames, self.max_frames, replace=False)
-           )
-           coords_seq = coords_seq[idx]
-       elif actual_frames >= self.max_frames:
-           idx = np.linspace(0, actual_frames - 1, self.max_frames, dtype=int)
-           coords_seq = coords_seq[idx]
-       else:
-           # PAD FIX: Repeat last frame instead of collapsing to origin
-           if actual_frames > 0:
-               pad_length = self.max_frames - actual_frames
-               pad = np.tile(
-                   coords_seq[actual_frames - 1:actual_frames],
-                   (pad_length, 1, 1)
-               )
-               coords_seq = np.concatenate([coords_seq, pad], axis=0)
-           else:
-               coords_seq = np.zeros((self.max_frames, 33, 4), dtype=np.float32)
-
-       # --- Compute joint angles: (max_frames, ANGLE_FEATURE_DIM) ---
-       angle_seq = np.stack(
-           [compute_joint_angles(coords_seq[t]) for t in range(self.max_frames)],
-           axis=0
-       )  # shape: (max_frames, ANGLE_FEATURE_DIM)
-
-       # FIX (Issue 5): Gaussian noise removed from here.
-       # It is applied in train_stgcn.py AFTER Z-score normalisation so that
-       # the ±0.05 perturbation is always relative to one standardised unit,
-       # making the noise scale consistent across all angle channels.
-
-       # FIX (Issue 4): Z-score normalisation removed from here.
-       # self.mean_std is never set in the current pipeline. Normalisation
-       # is performed in train_stgcn.py using per-channel statistics of shape
-       # (1, C, 1, 1, 1) that broadcast correctly against (B, C, T, V, 1).
-
-       # --- TOPOLOGY FIX: Map angles strictly to anatomical vertices ---
-       # Output shape: (Channels, Frames, Vertices, Persons) → (C, T, V, 1)
-       # where C = ANGLE_FEATURE_DIM, T = max_frames, V = 33
-       feature_tensor = np.zeros(
-           (ANGLE_FEATURE_DIM, self.max_frames, 33, 1), dtype=np.float32
-       )
-
-       for idx, (i, j, k) in enumerate(ANGLE_TRIPLETS):
-           # 'j' is the vertex joint (e.g., elbow in shoulder–elbow–wrist)
-           feature_tensor[idx, :, j, 0] = angle_seq[:, idx]
-
-       return torch.from_numpy(feature_tensor)
-
-   # ------------------------------------------------------------------
-   # Density-map ground truth
-   # ------------------------------------------------------------------
-
-   def _get_ground_truth_density_map(
-       self, filepath: Path, actual_frames: int
-   ) -> torch.Tensor:
-       """
-       Build normalized density map from time_points.
-
-       Current labeled_json format:
-           "time_points": [peak1, peak2, peak3, ...]
-           "rep_count": number of detected repetitions
-
-       Each time point represents one detected repetition peak/valley.
-       Each point becomes a normalized Gaussian bump.
-       The density map sum should be approximately equal to rep_count.
-       """
-       density_gt = np.zeros(self.max_frames, dtype=np.float32)
-
-       with open(filepath, "r") as f:
-           data = json.load(f)
-
-       if not isinstance(data, dict):
-           return torch.from_numpy(density_gt)
-
-       time_points = data.get("time_points", [])
-       rep_count   = data.get("rep_count", len(time_points))
-
-       if not time_points or actual_frames <= 0:
-           return torch.from_numpy(density_gt)
-
-       sigma = 2.0
-
-       for point in time_points:
-           point = int(point)
-
-           if actual_frames >= self.max_frames:
-               mapped = int((point / actual_frames) * self.max_frames)
-           else:
-               mapped = point
-
-           mapped = max(0, min(mapped, self.max_frames - 1))
-
-           for t in range(self.max_frames):
-               density_gt[t] += (
-                   np.exp(-((t - mapped) ** 2) / (2 * sigma ** 2))
-                   / (sigma * np.sqrt(2 * np.pi))
-               )
-
-       total = density_gt.sum()
-       if total > 0:
-           density_gt = density_gt / total * rep_count
-
-       return torch.from_numpy(density_gt)
-
-   # ------------------------------------------------------------------
    # __getitem__
    # ------------------------------------------------------------------
 
@@ -406,20 +246,73 @@ class CoreSetGCN_Dataset(Dataset):
            Normalised Gaussian density map over the temporal window.
        """
        filepath = self.file_paths[idx]
-       label    = self.labels[idx]
-
-       # Lightweight pre-read for actual frame count (needed by density map)
-       with open(filepath, 'r') as f:
-           meta = json.load(f)
-
-       if isinstance(meta, list):
-           actual_frames = len(meta)
-       elif isinstance(meta, dict):
-           actual_frames = len(meta.get('frames', []))
+       
+       # 1. Load the NPZ archive
+       data = np.load(filepath)
+       coords_seq = data['pose_sequence']  # Shape: (T, 33, 4)
+       density_gt = data['density']        # Shape: (T,)
+       
+       # Prefer the category_index baked into the npz, fallback to folder mapping
+       if 'category_index' in data.files:
+           label = int(data['category_index'])
        else:
-           actual_frames = 0
+           label = self.labels[idx]
+           
+       actual_frames = coords_seq.shape[0]
 
-       data_tensor = self._load_and_shape_data(filepath)
-       density_gt  = self._get_ground_truth_density_map(filepath, actual_frames)
+       # --- Augmentation on raw coordinates (before angle computation) ---
+       if self.augment:
+           coords_seq = self._apply_augmentations(coords_seq)
 
-       return data_tensor, label, density_gt
+       # --- Temporal sampling / padding ---
+       if self.augment and actual_frames > self.max_frames:
+           idx_seq = np.sort(np.random.choice(actual_frames, self.max_frames, replace=False))
+           coords_seq = coords_seq[idx_seq]
+           density_gt = density_gt[idx_seq]
+       elif actual_frames >= self.max_frames:
+           idx_seq = np.linspace(0, actual_frames - 1, self.max_frames, dtype=int)
+           coords_seq = coords_seq[idx_seq]
+           density_gt = density_gt[idx_seq]
+       else:
+           # PAD FIX: Repeat last frame instead of collapsing to origin
+           if actual_frames > 0:
+               pad_length = self.max_frames - actual_frames
+               pad_coords = np.tile(coords_seq[-1:], (pad_length, 1, 1))
+               coords_seq = np.concatenate([coords_seq, pad_coords], axis=0)
+               
+               # Pad density map with zeros
+               pad_density = np.zeros(pad_length, dtype=np.float32)
+               density_gt = np.concatenate([density_gt, pad_density], axis=0)
+           else:
+               coords_seq = np.zeros((self.max_frames, 33, 4), dtype=np.float32)
+               density_gt = np.zeros(self.max_frames, dtype=np.float32)
+
+       # Density Integral Preservation: Scaling the density map ensures that 
+       # temporal skipping/padding doesn't alter the total rep count (equivalent 
+       # to the integral guarantee in the old _get_ground_truth_density_map).
+       target_count = float(data['count']) if 'count' in data.files else float(density_gt.sum())
+       current_sum = density_gt.sum()
+       if current_sum > 0:
+           density_gt = (density_gt / current_sum) * target_count
+
+       # --- Compute joint angles: (max_frames, ANGLE_FEATURE_DIM) ---
+       angle_seq = np.stack(
+           [compute_joint_angles(coords_seq[t]) for t in range(self.max_frames)],
+           axis=0
+       )  # shape: (max_frames, ANGLE_FEATURE_DIM)
+
+       # FIX (Issue 5): Gaussian noise removed from here.
+       # FIX (Issue 4): Z-score normalisation removed from here.
+
+       # --- TOPOLOGY FIX: Map angles strictly to anatomical vertices ---
+       # Output shape: (Channels, Frames, Vertices, Persons) → (C, T, V, 1)
+       # where C = ANGLE_FEATURE_DIM, T = max_frames, V = 33
+       feature_tensor = np.zeros(
+           (ANGLE_FEATURE_DIM, self.max_frames, 33, 1), dtype=np.float32
+       )
+
+       for idx_angle, (i, j, k) in enumerate(ANGLE_TRIPLETS):
+           # 'j' is the vertex joint (e.g., elbow in shoulder–elbow–wrist)
+           feature_tensor[idx_angle, :, j, 0] = angle_seq[:, idx_angle]
+
+       return torch.from_numpy(feature_tensor), label, torch.from_numpy(density_gt)

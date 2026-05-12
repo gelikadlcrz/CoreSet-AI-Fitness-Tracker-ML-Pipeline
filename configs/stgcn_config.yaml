@@ -4,7 +4,7 @@
 # relative joint angles (one per anatomical triplet), not raw XYZ coordinates.
 # If your extraction notebook stores raw xyz in the JSON, set this to 3.
 
-data_dir:        "data/labeled_json"
+data_dir:        "data/final_data"
 checkpoint_dir:  "checkpoint"
 
 # Model

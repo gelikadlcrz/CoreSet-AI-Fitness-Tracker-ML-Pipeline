@@ -9,7 +9,7 @@ from collections import defaultdict
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Point to your actual data folder shown in the screenshot
-DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../data/labeled_json"))
+DATA_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../data/final_data"))
 OUTPUT_SPLIT_FILE = os.path.abspath(os.path.join(SCRIPT_DIR, "../../configs/data_splits.json"))
 
 TRAIN_RATIO = 0.70
@@ -32,7 +32,7 @@ def extract_subject_id(filename):
         
     # If no person ID is found, treat the base filename as a unique subject
     base_name = re.sub(r'_aug_.*', '', basename) 
-    return base_name.replace('.json', '')
+    return base_name.replace('.npz', '')
 
 def generate_splits():
     random.seed(SEED)
@@ -40,13 +40,13 @@ def generate_splits():
     # Dictionary to group files by subject
     subject_groups = defaultdict(list)
     
-    # 1. Traverse directories to find all JSON files
+    # 1. Traverse directories to find all NPZ files
     for root, dirs, files in os.walk(DATA_DIR):
         for filename in files:
-            if not filename.endswith('.json'):
+            if not filename.endswith('.npz'):
                 continue
                 
-            # Get the path relative to 'labeled_json' (e.g., 'bench_press/bench_press_094.json')
+            # Get the path relative to 'final_data'
             full_path = os.path.join(root, filename)
             rel_path = os.path.relpath(full_path, DATA_DIR)
             
