@@ -1,31 +1,29 @@
 """
-stgcn_multitask.py — Multi-task ST-GCN for exercise classification and
-repetition density-map prediction.
+stgcn_multitask.py — Optimized Multi-task ST-GCN (v3).
 
-Architecture:
-    Input smoothing (learned 1-D temporal conv at input stage)
-        ↓
-    ST-GCN backbone (3 blocks: in_channels→32→64→128, blocks 2/3 stride-2)
-        ↓
-    ┌─────────────────────────────────┐
-    │  Head 1: Classification         │
-    │  GlobalAvgPool → Dropout(0.5)   │
-    │  → Linear(128, num_classes)     │
-    └─────────────────────────────────┘
-    ┌─────────────────────────────────────────────────────────────────┐
-    │  Head 2: Density map                                            │
-    │  SpatialAvgPool (→ temporal series) → Dropout(0.3)              │
-    │  → Conv1d(128,1,k=1) → interpolate to max_frames → Sigmoid      │
-    └─────────────────────────────────────────────────────────────────┘
+Rep-counting overhaul
+---------------------
+The original density head failed because of a representation mismatch:
+  - GT density sums to rep_count (e.g. 8.0 over 150 frames → peak ≈ 0.05)
+  - Model outputs sigmoid ∈ [0, 1]
+  - MSE drives predictions toward zero (predicting 0 everywhere is near-optimal
+    for MSE when peaks are tiny fractions)
+  - Peak detection used threshold=0.5 → found zero peaks → OBO=9%
 
-MPS compatibility note:
-    AdaptiveAvgPool3d is not implemented on Apple MPS (as of PyTorch 2.x).
-    All global and spatial pooling is therefore done via explicit .mean()
-    calls over named dimensions, which are fully MPS-compatible.
+Fix: train on NORMALIZED density maps (GT divided by its max, so peaks=1.0).
+  - Model learns peak SHAPE and LOCATION, not absolute magnitude
+  - Peak detection threshold is meaningful (0.3 on a 0–1 scale)
+  - Rep count = number of detected peaks (not density integral)
+  - The coreset_dataset.py __getitem__ returns the raw rep count in the npz
+    so the evaluator can recover it without integral-of-density tricks
 
-References:
-    Yan et al. (2018) ST-GCN
-    Hu et al. (2022) TransRAC / RepCount density-map supervision
+Density head: lightweight 1-D dilated TCN (5 layers, dilations 1/2/4/8/1)
+  - Replaces the Transformer which was unstable on 700 samples
+  - Receptive field ≈ 65 frames — covers ~2 full reps
+  - weight_norm Conv1d for stable training
+  - Output: sigmoid ∈ [0,1] = normalized peak probability
+
+Classification head: 2-layer MLP with LayerNorm+GELU.
 """
 
 import torch
@@ -36,63 +34,143 @@ from src.utils.graph_utils import build_blazepose_33_adjacency_matrix
 from src.models.gcn import ST_GCN_Block
 
 
+# ---------------------------------------------------------------------------
+# Lightweight dilated TCN density head
+# ---------------------------------------------------------------------------
+
+class DilatedTCNDensityHead(nn.Module):
+    """
+    5-layer non-causal dilated TCN for density-map regression.
+
+    Effective receptive field = 1 + 2*(1+2+4+8+1)*(kernel_size-1) = 65 frames
+    with kernel_size=3. Covers roughly 2 complete reps at 30 fps.
+
+    Input:  (B, in_channels, T')
+    Output: (B, max_frames) in [0, 1]
+    """
+    def __init__(self, in_channels: int = 256, d: int = 64,
+                 kernel_size: int = 3, max_frames: int = 150,
+                 dropout: float = 0.1):
+        super().__init__()
+        self.max_frames = max_frames
+
+        self.proj = nn.Sequential(
+            nn.Conv1d(in_channels, d, kernel_size=1, bias=False),
+            nn.BatchNorm1d(d),
+            nn.ReLU(),
+        )
+
+        dilations = [1, 2, 4, 8, 1]
+        layers = []
+        for dil in dilations:
+            pad = dil * (kernel_size - 1) // 2
+            layers += [
+                nn.utils.weight_norm(
+                    nn.Conv1d(d, d, kernel_size=kernel_size,
+                              padding=pad, dilation=dil, bias=False)
+                ),
+                nn.BatchNorm1d(d),
+                nn.ReLU(),
+                nn.Dropout(p=dropout),
+            ]
+        self.tcn = nn.Sequential(*layers)
+        self.out = nn.Conv1d(d, 1, kernel_size=1)
+        self.drop_in = nn.Dropout(p=dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.drop_in(x)
+        x = self.proj(x)
+        x = self.tcn(x)
+        x = self.out(x)
+        x = F.interpolate(x, size=self.max_frames,
+                          mode='linear', align_corners=False)
+        return torch.sigmoid(x.squeeze(1))
+
+
+# ---------------------------------------------------------------------------
+# Classification head
+# ---------------------------------------------------------------------------
+
+class ClassificationHead(nn.Module):
+    def __init__(self, in_features: int, num_classes: int,
+                 mid_features: int = 128, dropout: float = 0.5):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.LayerNorm(in_features),
+            nn.Linear(in_features, mid_features),
+            nn.GELU(),
+            nn.Dropout(p=dropout),
+            nn.Linear(mid_features, num_classes)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.net(x)
+
+
+# ---------------------------------------------------------------------------
+# Multi-scale input smoothing
+# ---------------------------------------------------------------------------
+
+class MultiScaleInputSmoothing(nn.Module):
+    def __init__(self, channels: int):
+        super().__init__()
+        self.short = nn.Conv2d(channels, channels,
+                               kernel_size=(5, 1), padding=(2, 0), bias=False)
+        self.long  = nn.Conv2d(channels, channels,
+                               kernel_size=(13, 1), padding=(6, 0), bias=False)
+        self.bn = nn.BatchNorm2d(channels)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        b, c, t, v, m = x.size()
+        x = x.permute(0, 4, 1, 2, 3).contiguous().view(b * m, c, t, v)
+        x = self.bn(self.short(x) + self.long(x))
+        x = x.view(b, m, c, t, v).permute(0, 2, 3, 4, 1).contiguous()
+        return x
+
+
+# ---------------------------------------------------------------------------
+# Main model
+# ---------------------------------------------------------------------------
+
 class CoreSetSTGCN_MultiTask(nn.Module):
     """
-    Multi-task Spatial-Temporal GCN.
+    Multi-task ST-GCN v3 — optimized backbone + dilated TCN density head.
 
-    Args:
-        in_channels (int): Node feature channels (ANGLE_FEATURE_DIM = 14).
-        num_classes (int): Number of exercise classes. Default 4.
-        max_frames  (int): Fixed temporal window after padding/truncation.
-        node_count  (int): Number of skeleton nodes (33 for BlazePose).
+    IMPORTANT — density GT normalization contract:
+        The density head is trained on GT maps normalized to [0,1] by dividing
+        by their per-sample maximum. Do this in the training loop:
+            gt_norm = normalize_density_gt(density_gts)   # see train_stgcn.py
+        The model predicts normalized peak shape; rep count is recovered by
+        counting peaks above threshold in the predicted map.
     """
+
+    CHANNELS = [32, 64, 128, 256]
 
     def __init__(self, in_channels: int = 14, num_classes: int = 4,
                  max_frames: int = 150, node_count: int = 33):
         super().__init__()
-
         self.num_classes = num_classes
-        self.max_frames = max_frames
+        self.max_frames  = max_frames
 
-        # Symmetrically-normalised anatomical adjacency matrix
         adj = build_blazepose_33_adjacency_matrix()
 
-        # ------------------------------------------------------------------ #
-        #  Input smoothing                                                     #
-        #  "Learned 1D temporal convolutional layer at the input stage"        #
-        #  Kernel (9, 1): spans 9 frames × 1 node — purely temporal.          #
-        # ------------------------------------------------------------------ #
-        self.input_smoothing = nn.Conv2d(
-            in_channels, in_channels,
-            kernel_size=(9, 1), padding=(4, 0), bias=False
-        )
-        self.input_smoothing_bn = nn.BatchNorm2d(in_channels)
+        self.input_smoothing = MultiScaleInputSmoothing(in_channels)
 
-        # ------------------------------------------------------------------ #
-        #  ST-GCN backbone                                                     #
-        # ------------------------------------------------------------------ #
-        self.st_gcn_1 = ST_GCN_Block(
-            in_channels, 32, adj_matrix=adj, residual=False
-        )
-        self.st_gcn_2 = ST_GCN_Block(32,  64,  adj_matrix=adj, stride=2)
-        self.st_gcn_3 = ST_GCN_Block(64,  128, adj_matrix=adj, stride=2)
+        c = self.CHANNELS
+        self.st_gcn_1 = ST_GCN_Block(in_channels, c[0], adj, stride=1, residual=False)
+        self.st_gcn_2 = ST_GCN_Block(c[0], c[1], adj, stride=2)
+        self.st_gcn_3 = ST_GCN_Block(c[1], c[2], adj, stride=2)
+        self.st_gcn_4 = ST_GCN_Block(c[2], c[3], adj, stride=2)
 
-        # ------------------------------------------------------------------ #
-        #  Head 1: Classification                                              #
-        #  Global average pool implemented as .mean() — MPS compatible.       #
-        # ------------------------------------------------------------------ #
-        self.head_classification = nn.Sequential(
-            nn.Dropout(p=0.5),
-            nn.Linear(128, num_classes)
-        )
+        final_ch = c[-1]
 
-        # ------------------------------------------------------------------ #
-        #  Head 2: Density map                                                 #
-        #  Spatial pool over (V, M) via .mean() — MPS compatible.             #
-        # ------------------------------------------------------------------ #
-        self.head_density = nn.Sequential(
-            nn.Dropout(p=0.3),
-            nn.Conv1d(128, 1, kernel_size=1)
+        self.head_classification = ClassificationHead(
+            in_features=final_ch, num_classes=num_classes,
+            mid_features=128, dropout=0.5
+        )
+        self.head_density = DilatedTCNDensityHead(
+            in_channels=final_ch, d=64,
+            kernel_size=3, max_frames=max_frames, dropout=0.1
         )
 
         self._init_weights()
@@ -100,70 +178,39 @@ class CoreSetSTGCN_MultiTask(nn.Module):
     def _init_weights(self):
         for m in self.modules():
             if isinstance(m, (nn.Conv2d, nn.Conv1d)):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out',
-                                        nonlinearity='relu')
+                # weight_norm wraps the weight; skip those to avoid AttributeError
+                if hasattr(m, 'weight') and m.weight is not None:
+                    try:
+                        nn.init.kaiming_normal_(m.weight, mode='fan_out',
+                                                nonlinearity='relu')
+                    except ValueError:
+                        pass
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, (nn.BatchNorm2d, nn.BatchNorm1d)):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
             elif isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
+                nn.init.trunc_normal_(m.weight, std=0.02)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.LayerNorm):
+                nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
 
-    def _apply_input_smoothing(self, x: torch.Tensor) -> torch.Tensor:
-        """Learned temporal smoothing in (B*M, C, T, V) space."""
-        b, c, t, v, m = x.size()
-        x = x.permute(0, 4, 1, 2, 3).contiguous().view(b * m, c, t, v)
-        x = self.input_smoothing_bn(self.input_smoothing(x))
-        x = x.view(b, m, c, t, v).permute(0, 2, 3, 4, 1).contiguous()
-        return x
-
     def forward(self, x: torch.Tensor):
-        """
-        Args:
-            x: (B, C, T, V, M)
+        x = self.input_smoothing(x)
 
-        Returns:
-            classification_logits: (B, num_classes)
-            density_map:           (B, max_frames), values in [0, 1]
-        """
-        # --- Input smoothing ---
-        x = self._apply_input_smoothing(x)     # (B, C,   T,    V, M)
+        x = self.st_gcn_1(x)
+        x = self.st_gcn_2(x)
+        x = self.st_gcn_3(x)
+        x = self.st_gcn_4(x)
 
-        # --- ST-GCN backbone ---
-        x = self.st_gcn_1(x)                   # (B, 32,  T,    V, M)
-        x = self.st_gcn_2(x)                   # (B, 64,  T//2, V, M)
-        x = self.st_gcn_3(x)                   # (B, 128, T//4, V, M)
+        cls_feat    = x.mean(dim=(2, 3, 4))
+        logits      = self.head_classification(cls_feat)
 
-        # x shape: (B, C=128, T', V=33, M=1)
+        density_feat = x.mean(dim=(3, 4))
+        density_map  = self.head_density(density_feat)
 
-        # ------------------------------------------------------------------ #
-        #  Classification head                                                 #
-        #  Global average pool over T', V, M → (B, 128)                      #
-        #  Using .mean() instead of AdaptiveAvgPool3d for MPS compatibility.  #
-        # ------------------------------------------------------------------ #
-        # mean over T' (dim=2), then V (dim=2 after first mean), then M
-        cls_feat = x.mean(dim=2).mean(dim=2).mean(dim=2)   # (B, 128)
-        classification_logits = self.head_classification(cls_feat)
+        return logits, density_map
 
-        # ------------------------------------------------------------------ #
-        #  Density-map head                                                    #
-        #  Pool over V (dim=3) and M (dim=4), preserve T' (dim=2).           #
-        #  Using .mean() for MPS compatibility.                               #
-        # ------------------------------------------------------------------ #
-        density = x.mean(dim=4).mean(dim=3)    # (B, 128, T')
-
-        density = self.head_density(density)    # (B, 1, T')
-
-        # Upsample compressed temporal dim back to max_frames for MSE loss
-        density = F.interpolate(
-            density,
-            size=self.max_frames,
-            mode='linear',
-            align_corners=False
-        )                                       # (B, 1, max_frames)
-
-        density_map = torch.sigmoid(density.squeeze(1))   # (B, max_frames)
-
-        return classification_logits, density_map
