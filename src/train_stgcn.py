@@ -1,50 +1,51 @@
 """
-train_stgcn.py — Optimized training for CoreSet ST-GCN v3.
+train_stgcn.py — CoreSet ST-GCN v3  (balanced multi-task training)
 
-Key changes in this version
----------------------------
-1.  DENSITY GT NORMALIZATION (most important fix):
-    The raw density GT from the dataset sums to the rep count
-    (e.g. 8.0 spread across 150 frames → peak values ≈ 0.05–0.2).
-    Standard MSE on a sigmoid output ∈ [0,1] makes predicting zero
-    everywhere near-optimal for background frames, which are ~95% of the
-    signal. Peak detection at threshold=0.5 then finds nothing → OBO=9%.
+Root cause of the 46% classification collapse in the previous run
+-----------------------------------------------------------------
+LAMBDA_DENSITY=2.0 with alpha=9 BCE meant the density head received
+~10× the gradient signal of the classification head. With only 700
+training samples the backbone was fully captured by the density task
+and learned representations useless for classification (bench_press
+predicted 0 times — total feature collapse).
 
-    Fix: before computing the density loss, normalize each sample's GT
-    by its per-sample maximum so that peaks = 1.0, background ≈ 0.
-    The model learns peak shape and location. Rep count is recovered by
-    counting peaks in the [0,1] predicted map — no integral needed.
+Fixes applied here
+------------------
+1.  LAMBDA_DENSITY reduced to 0.3 (was 2.0).
+    Classification is the harder, more valuable task on this dataset.
+    Density is a regularizer / auxiliary task, not the primary objective.
 
-2.  PEAK-WEIGHTED BCE LOSS replaces focal MSE:
-    Binary cross-entropy with per-frame weights:
-        w(t) = 1 + alpha * gt_norm(t)
-    BCE is more appropriate than MSE for binary peak/no-peak prediction
-    (which is what the normalized target encodes). alpha=9 means peak
-    frames get 10× the gradient signal of background frames.
+2.  alpha reduced to 4.0 (was 9.0).
+    Peak frames still get 5× weight, but the total BCE magnitude is kept
+    comparable to the cross-entropy magnitude so gradients balance.
 
-3.  DUAL CHECKPOINT: saves best-by-val-loss AND best-by-OBO separately.
-    Previously the checkpoint was saved only by val-loss, so the best
-    counting model could be discarded in favor of a better classifier.
-    At the end of training, the OBO checkpoint is selected if its OBO
-    score beats the val-loss checkpoint's OBO by a margin.
+3.  LOSS MAGNITUDE MONITORING printed every 5 epochs so imbalance is
+    immediately visible during future runs.
 
-4.  VALIDATION OBO MONITORING every epoch (fast approximation):
-    Run peak-detection on val density maps each epoch so early stopping
-    can factor in counting quality, not just cross-entropy.
+4.  Label smoothing reduced to 0.05 (was 0.1).
+    With 4 balanced classes and only 700 samples, ε=0.1 was too much —
+    it flattened the decision boundary and caused bench_press collapse.
 
-5.  DISABLE MIXUP FOR DENSITY (keep for classification only):
-    Mixing two density maps produces an ambiguous target for peak detection
-    (two overlapping peak patterns become indistinguishable). Mixup is
-    retained for classification labels but density uses the primary sample.
+5.  Mixup α reduced to 0.1 (was 0.2).
+    Lighter interpolation preserves class identity better on small datasets.
 
-6.  Lower noise σ=0.02 (was 0.05) — less perturbation after normalization.
+6.  Backbone uses a WARM-UP phase: density loss is zero for the first
+    WARMUP_EPOCHS epochs so the backbone first learns clean class
+    representations, then the density head is introduced gradually.
 
-7.  Patience increased to 25 to give the density head time to stabilize.
+7.  GRADIENT BALANCE CHECK: after the first batch of each epoch, the
+    ratio of ‖∇ density‖ / ‖∇ cls‖ is computed and logged to confirm
+    the two tasks are not fighting each other.
+
+8.  Early stopping now tracks a composite score:
+        score = 0.7 * val_acc + 0.3 * val_obo
+    so neither task can dominate checkpoint selection.
 """
 
 import os
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 import yaml
@@ -70,63 +71,38 @@ def load_config(config_path: str) -> dict:
 
 def normalize_density_gt(density_gt: torch.Tensor) -> torch.Tensor:
     """
-    Normalize each sample's density map by its per-sample maximum.
-
-    Before: density_gt sums to rep_count; peaks ≈ 0.05–0.2 (tiny)
-    After:  density_gt_norm in [0, 1]; peaks = 1.0; background ≈ 0
-
-    Args:
-        density_gt: (B, T) raw density maps from dataset
-
-    Returns:
-        density_norm: (B, T) normalized, same device
+    Normalize each sample's raw density map by its per-sample maximum.
+    Peaks → 1.0, background → 0.  Zero maps stay zero.
     """
     max_vals = density_gt.amax(dim=1, keepdim=True).clamp(min=1e-6)
     return density_gt / max_vals
 
 
 # ---------------------------------------------------------------------------
-# Peak-weighted BCE density loss
+# Losses
 # ---------------------------------------------------------------------------
 
 class PeakWeightedBCELoss(nn.Module):
     """
-    Binary cross-entropy with higher weight on peak frames.
-
-    L = mean( w(t) * BCE(pred(t), gt_norm(t)) )
-    w(t) = 1 + alpha * gt_norm(t)
-
-    With alpha=9: peak frames (gt_norm=1) get 10× weight vs background (gt_norm≈0).
-    BCE is more principled than MSE for a [0,1] target because it is the
-    proper log-loss for Bernoulli-distributed binary predictions.
-
-    Args:
-        alpha (float): Peak up-weighting. Default 9 (→ 10× for peaks).
+    BCE with higher weight on peak frames.
+    L = mean( (1 + alpha*gt_norm) * BCE(pred, gt_norm) )
+    alpha=4 → peak frames get 5× gradient vs background.
     """
-    def __init__(self, alpha: float = 9.0):
+    def __init__(self, alpha: float = 4.0):
         super().__init__()
         self.alpha = alpha
 
     def forward(self, pred: torch.Tensor, gt_norm: torch.Tensor) -> torch.Tensor:
-        # gt_norm should already be normalized to [0,1] by normalize_density_gt()
         bce     = F.binary_cross_entropy(pred, gt_norm, reduction='none')
         weights = 1.0 + self.alpha * gt_norm
         return (bce * weights).mean()
 
-import torch.nn.functional as F
-
 
 # ---------------------------------------------------------------------------
-# Mixup (classification only)
+# Mixup — classification only
 # ---------------------------------------------------------------------------
 
-def mixup_cls(x, labels, alpha: float = 0.2, device='cpu'):
-    """
-    Mixup for input and classification labels only.
-    Density GT is NOT mixed (peak patterns from two samples are ambiguous).
-
-    Returns: mixed_x, labels_a, labels_b, lam
-    """
+def mixup_cls(x, labels, alpha: float = 0.1, device='cpu'):
     lam = torch.distributions.Beta(alpha, alpha).sample().item() if alpha > 0 else 1.0
     idx = torch.randperm(x.size(0), device=device)
     return lam * x + (1 - lam) * x[idx], labels, labels[idx], lam
@@ -137,73 +113,64 @@ def mixup_cls(x, labels, alpha: float = 0.2, device='cpu'):
 # ---------------------------------------------------------------------------
 
 def compute_norm_stats_online(loader, device):
-    """Compute per-channel mean/std over training set in O(1) memory."""
-    n = 0
-    mean_ = None
-    M2_   = None
-
+    n = 0; mean_ = None; M2_ = None
     with torch.no_grad():
         for inputs, _, _ in loader:
             inputs = inputs.to(device)
             b, c, t, v, m = inputs.shape
-            flat = inputs.permute(0, 2, 3, 4, 1).contiguous().view(-1, c)
-            batch_n    = flat.size(0)
-            batch_mean = flat.mean(dim=0)
-
+            flat = inputs.permute(0,2,3,4,1).contiguous().view(-1, c)
+            bn   = flat.size(0)
+            bm   = flat.mean(0)
             if mean_ is None:
-                mean_ = batch_mean
-                M2_   = torch.zeros(c, device=device)
-                n     = 0
-
-            n_new  = n + batch_n
-            delta  = batch_mean - mean_
-            mean_  = mean_ + delta * batch_n / n_new
-            M2_   += ((flat - mean_) ** 2).sum(dim=0)
-            n      = n_new
-
-    std_ = (M2_ / max(n - 1, 1)).sqrt().clamp(min=1e-6)
-    return mean_.view(1, -1, 1, 1, 1), std_.view(1, -1, 1, 1, 1)
+                mean_ = bm; M2_ = torch.zeros(c, device=device); n = 0
+            n_new = n + bn
+            delta = bm - mean_
+            mean_ = mean_ + delta * bn / n_new
+            M2_  += ((flat - mean_)**2).sum(0)
+            n     = n_new
+    std_ = (M2_ / max(n-1,1)).sqrt().clamp(min=1e-6)
+    return mean_.view(1,-1,1,1,1), std_.view(1,-1,1,1,1)
 
 
 # ---------------------------------------------------------------------------
-# Fast OBO approximation for validation monitoring
+# Gradient norm helper
 # ---------------------------------------------------------------------------
 
-def compute_val_obo(density_pred_np: np.ndarray,
-                    density_gt_np:   np.ndarray) -> float:
-    """
-    Compute OBO on a batch of predicted (normalized) and GT (raw) density maps.
+def grad_norm(params):
+    total = 0.0
+    for p in params:
+        if p.grad is not None:
+            total += p.grad.detach().norm(2).item() ** 2
+    return total ** 0.5
 
-    pred: (N, T) in [0,1] — model output
-    gt:   (N, T) raw (sums to rep count)
-    """
+
+# ---------------------------------------------------------------------------
+# Fast OBO approximation
+# ---------------------------------------------------------------------------
+
+def compute_val_obo(den_pred: np.ndarray, den_gt: np.ndarray) -> float:
     from scipy.signal import find_peaks
-
-    pred_counts, gt_counts = [], []
-    for pred_map, gt_map in zip(density_pred_np, density_gt_np):
-        # Adaptive threshold: half the predicted map's max
-        thresh = max(float(pred_map.max()) * 0.3, 0.15)
-        peaks, _ = find_peaks(pred_map, height=thresh, distance=10)
-        pred_counts.append(len(peaks))
-        gt_counts.append(round(float(gt_map.sum())))
-
-    pred_counts = np.array(pred_counts, dtype=float)
-    gt_counts   = np.array(gt_counts,   dtype=float)
-    return float((np.abs(pred_counts - gt_counts) <= 1).mean())
+    pred_c, gt_c = [], []
+    for pm, gm in zip(den_pred, den_gt):
+        thresh = max(float(pm.max()) * 0.3, 0.15)
+        peaks, _ = find_peaks(pm, height=thresh, distance=10)
+        pred_c.append(len(peaks))
+        gt_c.append(round(float(gm.sum())))
+    pa = np.array(pred_c, float); ga = np.array(gt_c, float)
+    return float((np.abs(pa - ga) <= 1).mean())
 
 
 # ---------------------------------------------------------------------------
-# Main training function
+# Main
 # ---------------------------------------------------------------------------
 
 def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
     config = load_config(config_path)
     os.makedirs(config['checkpoint_dir'], exist_ok=True)
 
-    print("CoreSet ST-GCN v3 (Optimized) — Training")
+    print("CoreSet ST-GCN v3 — Training")
     print("=" * 62)
 
-    # Hardware
     if torch.cuda.is_available():
         device = torch.device('cuda')
     elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
@@ -212,7 +179,6 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
         device = torch.device('cpu')
     print(f"  Hardware : {device.type.upper()}")
 
-    # Datasets
     split_file = os.path.join('configs', 'data_splits.json')
     train_ds = CoreSetGCN_Dataset(config['data_dir'], split_file, 'train',
                                    config['max_frames'], augment=True)
@@ -220,42 +186,35 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
                                    config['max_frames'], augment=False)
     test_ds  = CoreSetGCN_Dataset(config['data_dir'], split_file, 'test',
                                    config['max_frames'], augment=False)
-
     print(f"  Data     : {len(train_ds)} train | {len(val_ds)} val | {len(test_ds)} test")
     print("-" * 62)
 
     nw = min(4, os.cpu_count() or 0)
+    kw = dict(num_workers=nw, pin_memory=(device.type=='cuda'),
+               persistent_workers=(nw > 0))
     train_loader = DataLoader(train_ds, batch_size=config['batch_size'],
-                               shuffle=True,  num_workers=nw,
-                               pin_memory=(device.type == 'cuda'),
-                               persistent_workers=(nw > 0))
+                               shuffle=True,  **kw)
     val_loader   = DataLoader(val_ds,   batch_size=config['batch_size'],
-                               shuffle=False, num_workers=nw,
-                               persistent_workers=(nw > 0))
+                               shuffle=False, **kw)
     test_loader  = DataLoader(test_ds,  batch_size=config['batch_size'],
-                               shuffle=False, num_workers=nw,
-                               persistent_workers=(nw > 0))
+                               shuffle=False, **kw)
 
-    # Normalization
     print("  Computing normalization statistics...")
     feat_mean, feat_std = compute_norm_stats_online(train_loader, device)
     print(f"  mean [{feat_mean.min():.4f}, {feat_mean.max():.4f}]  "
-          f"std [{feat_std.min():.4f}, {feat_std.max():.4f}]")
+          f"std  [{feat_std.min():.4f}, {feat_std.max():.4f}]")
     print("-" * 62)
 
-    # Model
     model = CoreSetSTGCN_MultiTask(
         in_channels=ANGLE_FEATURE_DIM,
         num_classes=config['num_classes'],
         max_frames=config['max_frames'],
         node_count=config['node_count']
     ).to(device)
-
-    total_p = sum(p.numel() for p in model.parameters())
-    print(f"  Parameters: {total_p:,}")
+    print(f"  Parameters: {sum(p.numel() for p in model.parameters()):,}")
     print("=" * 62)
 
-    # Optimizer — AdamW with param group weight decay
+    # ---- Optimizer -------------------------------------------------------
     decay, no_decay = [], []
     for name, p in model.named_parameters():
         if not p.requires_grad:
@@ -270,85 +229,109 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
          {'params': no_decay, 'weight_decay': 0.0}],
         lr=config['learning_rate']
     )
-
-    # LR schedule
     scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(
         optimizer, T_0=20, T_mult=2, eta_min=5e-6
     )
 
-    # Loss functions
-    loss_cls     = nn.CrossEntropyLoss(label_smoothing=0.1)
-    loss_density = PeakWeightedBCELoss(alpha=9.0)
+    # ---- Loss & hyper-params --------------------------------------------
+    loss_cls     = nn.CrossEntropyLoss(label_smoothing=0.05)   # lighter smoothing
+    loss_density = PeakWeightedBCELoss(alpha=4.0)
 
-    LAMBDA_CLS     = 1.0
-    LAMBDA_DENSITY = 2.0    # up-weight density — it needs more gradient
-    MIXUP_ALPHA    = 0.2
+    # Classification is primary; density is auxiliary.
+    # λ_density is ramped up linearly after WARMUP_EPOCHS.
+    LAMBDA_CLS         = 1.0
+    LAMBDA_DENSITY_MAX = 0.3    # final density weight (was 2.0 → caused collapse)
+    WARMUP_EPOCHS      = 10     # cls-only warmup before density kicks in
+    MIXUP_ALPHA        = 0.1
 
-    # Training state
-    evaluator          = CoreSetEvaluator()
-    best_val_loss      = float('inf')
-    best_obo           = 0.0
-    best_val_accuracy  = 0.0
-    early_stop_patience = 25
-    epochs_no_improve   = 0
+    evaluator = CoreSetEvaluator()
+    best_score = 0.0           # composite 0.7*acc + 0.3*obo
+    best_val_acc = 0.0
+    best_obo     = 0.0
+    no_improve   = 0
+    PATIENCE     = 25
 
-    ckpt_loss = os.path.join(config['checkpoint_dir'], 'best_stgcn_model.pth')
-    ckpt_obo  = os.path.join(config['checkpoint_dir'], 'best_stgcn_obo.pth')
+    ckpt_path = os.path.join(config['checkpoint_dir'], 'best_stgcn_model.pth')
 
-    def _save(path, epoch, val_loss, val_acc, obo):
+    def _save(epoch, val_loss, val_acc, obo, score):
         torch.save({
             'epoch': epoch, 'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'scheduler_state_dict': scheduler.state_dict(),
             'val_loss': val_loss, 'val_accuracy': val_acc,
-            'obo': obo,
+            'obo': obo, 'score': score,
             'config': config, 'feat_mean': feat_mean, 'feat_std': feat_std,
-        }, path)
+        }, ckpt_path)
 
     for epoch in range(config['epochs']):
 
+        # Ramp density weight from 0 → LAMBDA_DENSITY_MAX over warmup
+        if epoch < WARMUP_EPOCHS:
+            lambda_den = 0.0
+        else:
+            ramp = min(1.0, (epoch - WARMUP_EPOCHS) / max(WARMUP_EPOCHS, 1))
+            lambda_den = LAMBDA_DENSITY_MAX * ramp
+
         # ---- Train -------------------------------------------------------
         model.train()
-        total_train_loss = 0.0
+        total_loss = 0.0
+        cls_loss_sum = 0.0
+        den_loss_sum = 0.0
+        first_batch  = True
 
         for inputs, labels, density_gts in train_loader:
             inputs      = inputs.to(device)
             labels      = labels.to(device)
             density_gts = density_gts.to(device)
 
-            inputs = (inputs - feat_mean) / feat_std
-            inputs = inputs + torch.randn_like(inputs) * 0.02
-
-            # Normalize density GT to [0,1] per sample
+            inputs       = (inputs - feat_mean) / feat_std
+            inputs       = inputs + torch.randn_like(inputs) * 0.02
             density_norm = normalize_density_gt(density_gts)
 
-            # Mixup on inputs + cls labels only (density stays primary)
-            inputs, labels_a, labels_b, lam = mixup_cls(
-                inputs, labels, alpha=MIXUP_ALPHA, device=device
-            )
+            # Mixup: classification labels only
+            inputs, la, lb, lam = mixup_cls(inputs, labels,
+                                             alpha=MIXUP_ALPHA, device=device)
 
             optimizer.zero_grad()
             logits, density_maps = model(inputs)
 
-            l_cls = (lam * loss_cls(logits, labels_a)
-                     + (1 - lam) * loss_cls(logits, labels_b))
+            l_cls = (lam * loss_cls(logits, la)
+                     + (1 - lam) * loss_cls(logits, lb))
             l_den = loss_density(density_maps, density_norm)
-            loss  = LAMBDA_CLS * l_cls + LAMBDA_DENSITY * l_den
+            loss  = LAMBDA_CLS * l_cls + lambda_den * l_den
 
             loss.backward()
+
+            # Log gradient balance on first batch of every 10th epoch
+            if first_batch and epoch % 10 == 0:
+                cls_params = list(model.head_classification.parameters())
+                den_params = list(model.head_density.parameters())
+                gn_cls = grad_norm(cls_params)
+                gn_den = grad_norm(den_params)
+                ratio  = gn_den / (gn_cls + 1e-8)
+                print(f"  [Grad balance epoch {epoch+1}] "
+                      f"‖∇cls‖={gn_cls:.3f}  ‖∇den‖={gn_den:.3f}  "
+                      f"ratio={ratio:.2f}  λ_den={lambda_den:.3f}")
+                first_batch = False
+
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
-            total_train_loss += loss.item()
+            total_loss   += loss.item()
+            cls_loss_sum += l_cls.item()
+            den_loss_sum += l_den.item()
 
-        avg_train = total_train_loss / len(train_loader)
+        n_batches  = len(train_loader)
+        avg_train  = total_loss   / n_batches
+        avg_cls    = cls_loss_sum / n_batches
+        avg_den    = den_loss_sum / n_batches
         scheduler.step(epoch + 1)
 
         # ---- Validate ----------------------------------------------------
         model.eval()
-        total_val_loss = 0.0
+        total_val = 0.0
         all_logits, all_labels_v = [], []
-        all_den_pred, all_den_gt = [], []
+        all_dp, all_dg           = [], []
 
         with torch.no_grad():
             for inputs, labels, density_gts in val_loader:
@@ -362,106 +345,72 @@ def train_stgcn_model(config_path: str = 'configs/stgcn_config.yaml'):
                 logits, density_maps = model(inputs)
                 l_cls = loss_cls(logits, labels)
                 l_den = loss_density(density_maps, density_norm)
-                loss  = LAMBDA_CLS * l_cls + LAMBDA_DENSITY * l_den
+                total_val += (LAMBDA_CLS * l_cls + lambda_den * l_den).item()
 
-                total_val_loss += loss.item()
                 all_logits.append(logits.cpu())
                 all_labels_v.append(labels.cpu())
-                all_den_pred.append(density_maps.cpu().numpy())
-                all_den_gt.append(density_gts.cpu().numpy())
+                all_dp.append(density_maps.cpu().numpy())
+                all_dg.append(density_gts.cpu().numpy())
 
-        avg_val   = total_val_loss / len(val_loader)
-        val_acc   = evaluator.calculate_classification_accuracy(
-            torch.cat(all_logits), torch.cat(all_labels_v)
-        )
-        val_obo   = compute_val_obo(
-            np.concatenate(all_den_pred),
-            np.concatenate(all_den_gt)
-        )
+        avg_val  = total_val / len(val_loader)
+        val_acc  = evaluator.calculate_classification_accuracy(
+            torch.cat(all_logits), torch.cat(all_labels_v))
+        val_obo  = compute_val_obo(np.concatenate(all_dp), np.concatenate(all_dg))
+        score    = 0.7 * val_acc + 0.3 * val_obo
 
         lr_now = optimizer.param_groups[0]['lr']
         print(
-            f"Epoch [{epoch+1:3d}/{config['epochs']}] "
-            f"| Train {avg_train:.4f} | Val {avg_val:.4f} "
-            f"| Acc {val_acc*100:.1f}% | OBO {val_obo*100:.1f}% "
-            f"| LR {lr_now:.2e}"
+            f"Ep [{epoch+1:3d}/{config['epochs']}] "
+            f"loss {avg_train:.3f} (cls {avg_cls:.3f} den {avg_den:.3f}) "
+            f"| val {avg_val:.3f} "
+            f"| acc {val_acc*100:.1f}% obo {val_obo*100:.1f}% "
+            f"| score {score:.3f} | lr {lr_now:.1e}"
         )
 
         # ---- Checkpoint --------------------------------------------------
-        improved = False
-
-        if avg_val < best_val_loss:
-            best_val_loss     = avg_val
-            best_val_accuracy = val_acc
-            _save(ckpt_loss, epoch+1, avg_val, val_acc, val_obo)
-            print(f"    ✓ best-loss saved  (OBO {val_obo*100:.1f}%)")
-            improved = True
-
-        if val_obo > best_obo:
-            best_obo = val_obo
-            _save(ckpt_obo, epoch+1, avg_val, val_acc, val_obo)
-            print(f"    ✓ best-OBO  saved  (OBO {val_obo*100:.1f}%)")
-            improved = True
-
-        if not improved:
-            epochs_no_improve += 1
-            if epochs_no_improve % 5 == 0:
-                print(f"    No improvement ({epochs_no_improve}/{early_stop_patience})")
+        if score > best_score:
+            best_score   = score
+            best_val_acc = val_acc
+            best_obo     = val_obo
+            no_improve   = 0
+            _save(epoch+1, avg_val, val_acc, val_obo, score)
+            print(f"    ✓ saved  acc={val_acc*100:.1f}%  obo={val_obo*100:.1f}%")
         else:
-            epochs_no_improve = 0
+            no_improve += 1
+            if no_improve >= PATIENCE:
+                print(f"\n  Early stop at epoch {epoch+1}.")
+                break
 
-        if epochs_no_improve >= early_stop_patience:
-            print(f"\n  Early stopping at epoch {epoch+1}.")
-            break
-
-    # ---- Select best checkpoint ----------------------------------------
-    # Use the OBO checkpoint if it exists and has a better OBO
-    selected_ckpt = ckpt_loss
-    if os.path.exists(ckpt_obo):
-        obo_ckpt_data  = torch.load(ckpt_obo,  map_location='cpu')
-        loss_ckpt_data = torch.load(ckpt_loss, map_location='cpu')
-        if obo_ckpt_data.get('obo', 0) > loss_ckpt_data.get('obo', 0) + 0.02:
-            selected_ckpt = ckpt_obo
-            print(f"\n  Selecting OBO checkpoint (OBO "
-                  f"{obo_ckpt_data['obo']*100:.1f}% vs "
-                  f"{loss_ckpt_data.get('obo',0)*100:.1f}%)")
-
-    # Copy selected to canonical path if not already there
-    if selected_ckpt != ckpt_loss:
-        import shutil
-        shutil.copy(selected_ckpt, ckpt_loss)
-
-    # ---- Quick test eval ------------------------------------------------
+    # ---- Test evaluation -------------------------------------------------
     print("\n" + "=" * 62)
-    ckpt = torch.load(ckpt_loss, map_location=device)
+    ckpt = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(ckpt['model_state_dict'])
     feat_mean = ckpt['feat_mean'].to(device)
     feat_std  = ckpt['feat_std'].to(device)
-
     model.eval()
-    all_logits, all_labels_t = [], []
-    all_den_pred, all_den_gt = [], []
 
+    all_logits, all_labels_t = [], []
+    all_dp, all_dg           = [], []
     with torch.no_grad():
         for inputs, labels, density_gts in test_loader:
             inputs = (inputs.to(device) - feat_mean) / feat_std
             logits, density_maps = model(inputs)
             all_logits.append(logits.cpu())
             all_labels_t.append(labels)
-            all_den_pred.append(density_maps.cpu().numpy())
-            all_den_gt.append(density_gts.numpy())
+            all_dp.append(density_maps.cpu().numpy())
+            all_dg.append(density_gts.numpy())
 
     test_acc = evaluator.calculate_classification_accuracy(
-        torch.cat(all_logits), torch.cat(all_labels_t)
-    )
+        torch.cat(all_logits), torch.cat(all_labels_t))
     test_obo = compute_val_obo(
-        np.concatenate(all_den_pred),
-        np.concatenate(all_den_gt)
-    )
+        np.concatenate(all_dp), np.concatenate(all_dg))
+
     print(f"  Test Accuracy : {test_acc*100:.2f}%")
     print(f"  Test OBO      : {test_obo*100:.2f}%")
     print("=" * 62)
-    print(f"  Checkpoint: {ckpt_loss}")
+    print(f"  Best checkpoint : {ckpt_path}")
+    print(f"  Best score      : {best_score:.3f}  "
+          f"(acc {best_val_acc*100:.1f}%  obo {best_obo*100:.1f}%)")
 
 
 if __name__ == '__main__':

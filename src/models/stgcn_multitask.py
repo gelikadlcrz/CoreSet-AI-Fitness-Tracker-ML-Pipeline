@@ -213,4 +213,3 @@ class CoreSetSTGCN_MultiTask(nn.Module):
         density_map  = self.head_density(density_feat)
 
         return logits, density_map
-
