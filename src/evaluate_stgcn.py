@@ -26,6 +26,7 @@ Usage:
 import argparse
 import json
 import os
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -51,6 +52,8 @@ from src.models.stgcn_multitask import (
 from src.utils.metrics import (
     CoreSetEvaluator
 )
+
+from src.utils.versioning import resolve_checkpoint_path
 
 
 # ---------------------------------------------------------------------------
@@ -159,51 +162,40 @@ def run_inference(
 def compute_counting_metrics(
     density_pred: np.ndarray,
     density_gt: np.ndarray,
-    evaluator: CoreSetEvaluator
+    evaluator: CoreSetEvaluator,
+    postprocess: dict | None = None,
 ):
+    """Convert density maps to counts with adaptive/tuned peak detection."""
+
+    postprocess = postprocess or {
+        "adaptive": True,
+        "threshold_ratio": 0.30,
+        "threshold_floor": 0.15,
+        "min_distance": 10,
+        "prominence_ratio": 0.05,
+    }
 
     pred_counts = []
-
     gt_counts = []
 
-    for pred_map, gt_map in zip(
-        density_pred,
-        density_gt
-    ):
-
-        pred_count = (
-            CoreSetEvaluator
-            .density_map_to_count(pred_map)
+    for pred_map, gt_map in zip(density_pred, density_gt):
+        pred_count = CoreSetEvaluator.density_map_to_count(
+            pred_map,
+            threshold=postprocess.get("threshold"),
+            min_distance=int(postprocess.get("min_distance", 10)),
+            adaptive=bool(postprocess.get("adaptive", True)),
+            threshold_ratio=float(postprocess.get("threshold_ratio", 0.30)),
+            threshold_floor=float(postprocess.get("threshold_floor", 0.15)),
+            prominence_ratio=float(postprocess.get("prominence_ratio", 0.05)),
         )
-
         pred_counts.append(pred_count)
+        gt_counts.append(round(float(gt_map.sum())))
 
-        gt_counts.append(
-            round(float(gt_map.sum()))
-        )
+    mae = evaluator.calculate_normalized_mae(pred_counts, gt_counts)
+    rmse = evaluator.calculate_rmse(pred_counts, gt_counts)
+    obo = evaluator.calculate_obo_accuracy(pred_counts, gt_counts)
 
-    mae = evaluator.calculate_normalized_mae(
-        pred_counts,
-        gt_counts
-    )
-
-    rmse = evaluator.calculate_rmse(
-        pred_counts,
-        gt_counts
-    )
-
-    obo = evaluator.calculate_obo_accuracy(
-        pred_counts,
-        gt_counts
-    )
-
-    return (
-        mae,
-        rmse,
-        obo,
-        pred_counts,
-        gt_counts
-    )
+    return mae, rmse, obo, pred_counts, gt_counts
 
 
 # ---------------------------------------------------------------------------
@@ -345,7 +337,8 @@ def format_report(
     rmse: float,
     obo: float,
     class_names,
-    checkpoint_path: str
+    checkpoint_path: str,
+    postprocess: dict | None = None,
 ):
 
     lines = [
@@ -427,6 +420,12 @@ def format_report(
 
         "── Repetition Counting Metrics ─────────────────────────────",
 
+        "  Peak Detection   : "
+        f"adaptive={bool((postprocess or {}).get('adaptive', True))}, "
+        f"ratio={(postprocess or {}).get('threshold_ratio', 0.30)}, "
+        f"floor={(postprocess or {}).get('threshold_floor', 0.15)}, "
+        f"distance={(postprocess or {}).get('min_distance', 10)}",
+
         f"  Normalized MAE   : {mae:.4f}"
         "   (L1, per RepCount benchmark — Hu et al., 2022)",
 
@@ -450,10 +449,24 @@ def format_report(
 
 def evaluate(
     config_path="configs/stgcn_config.yaml",
-    checkpoint_path="checkpoint/best_stgcn_model.pth"
+    checkpoint_path="latest",
+    count_threshold: float | None = None,
+    count_threshold_ratio: float | None = None,
+    count_threshold_floor: float | None = None,
+    count_min_distance: int | None = None,
+    count_prominence_ratio: float | None = None,
+    adaptive_counting: bool = True,
 ):
 
     config = load_config(config_path)
+
+    checkpoint_path = str(
+        resolve_checkpoint_path(
+            checkpoint_path,
+            checkpoint_root=config.get("checkpoint_dir", "checkpoint"),
+            prefix="stgcn",
+        )
+    )
 
     device = select_device()
 
@@ -483,6 +496,28 @@ def evaluate(
     feat_mean = ckpt["feat_mean"].to(device)
 
     feat_std = ckpt["feat_std"].to(device)
+
+    # Counting post-processing: prefer tuned validation parameters stored in
+    # the checkpoint, then allow CLI overrides.
+    postprocess = ckpt.get("counting_postprocess", {
+        "adaptive": True,
+        "threshold_ratio": 0.30,
+        "threshold_floor": 0.15,
+        "min_distance": 10,
+        "prominence_ratio": 0.05,
+    }).copy()
+    postprocess["adaptive"] = bool(adaptive_counting)
+    if count_threshold is not None:
+        postprocess["threshold"] = float(count_threshold)
+        postprocess["adaptive"] = False
+    if count_threshold_ratio is not None:
+        postprocess["threshold_ratio"] = float(count_threshold_ratio)
+    if count_threshold_floor is not None:
+        postprocess["threshold_floor"] = float(count_threshold_floor)
+    if count_min_distance is not None:
+        postprocess["min_distance"] = int(count_min_distance)
+    if count_prominence_ratio is not None:
+        postprocess["prominence_ratio"] = float(count_prominence_ratio)
 
     # ----------------------------------------------------------------------
     # Build model
@@ -590,7 +625,9 @@ def evaluate(
 
             density_gt,
 
-            evaluator
+            evaluator,
+
+            postprocess
         )
 
     # ----------------------------------------------------------------------
@@ -609,7 +646,9 @@ def evaluate(
 
         class_names,
 
-        checkpoint_path
+        checkpoint_path,
+
+        postprocess
     )
 
     print(report)
@@ -618,10 +657,8 @@ def evaluate(
     # Save Results
     # ----------------------------------------------------------------------
 
-    os.makedirs(
-        "results",
-        exist_ok=True
-    )
+    results_dir = Path("results") / Path(checkpoint_path).parent.name
+    results_dir.mkdir(parents=True, exist_ok=True)
 
     # JSON
     results_dict = {
@@ -639,11 +676,16 @@ def evaluate(
             "rmse": rmse,
 
             "obo_accuracy": obo,
+
+            "postprocess": postprocess,
+
+            "pred_counts": pred_counts,
+
+            "gt_counts": gt_counts,
         },
     }
 
-    json_path = \
-        "results/stgcn_evaluation_results.json"
+    json_path = results_dir / "stgcn_evaluation_results.json"
 
     with open(
         json_path,
@@ -658,8 +700,7 @@ def evaluate(
         )
 
     # Text report
-    txt_path = \
-        "results/stgcn_evaluation_report.txt"
+    txt_path = results_dir / "stgcn_evaluation_report.txt"
 
     with open(
         txt_path,
@@ -703,14 +744,84 @@ if __name__ == "__main__":
 
         "--checkpoint",
 
-        default="checkpoint/best_stgcn_model.pth",
+        default="latest",
 
-        help="Path to checkpoint",
+        help="Path to checkpoint, or 'latest' to use the newest versioned run",
+    )
+
+    parser.add_argument(
+
+        "--threshold",
+
+        type=float,
+
+        default=None,
+
+        help="Optional fixed peak threshold. Overrides adaptive counting.",
+    )
+
+    parser.add_argument(
+
+        "--threshold-ratio",
+
+        type=float,
+
+        default=None,
+
+        help="Adaptive threshold ratio multiplied by each sample's max peak.",
+    )
+
+    parser.add_argument(
+
+        "--threshold-floor",
+
+        type=float,
+
+        default=None,
+
+        help="Adaptive threshold floor.",
+    )
+
+    parser.add_argument(
+
+        "--min-distance",
+
+        type=int,
+
+        default=None,
+
+        help="Minimum frames between detected peaks.",
+    )
+
+    parser.add_argument(
+
+        "--prominence-ratio",
+
+        type=float,
+
+        default=None,
+
+        help="Minimum prominence as a fraction of the sample's max peak.",
+    )
+
+    parser.add_argument(
+
+        "--no-adaptive-counting",
+
+        action="store_true",
+
+        help="Use fixed-threshold counting instead of adaptive counting.",
     )
 
     args = parser.parse_args()
 
     evaluate(
         args.config,
-        args.checkpoint
+        args.checkpoint,
+        count_threshold=args.threshold,
+        count_threshold_ratio=args.threshold_ratio,
+        count_threshold_floor=args.threshold_floor,
+        count_min_distance=args.min_distance,
+        count_prominence_ratio=args.prominence_ratio,
+        adaptive_counting=not args.no_adaptive_counting,
     )

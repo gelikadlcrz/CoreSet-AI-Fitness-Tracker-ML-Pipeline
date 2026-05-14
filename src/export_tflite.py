@@ -25,13 +25,13 @@ Deployment contract (methodology §Validation, Testing & Deployment)
 
 Usage
 -----
-    # Default paths
+    # Uses the newest versioned checkpoint by default
     python -m src.export_tflite
 
     # Custom paths
     python -m src.export_tflite \\
-        --checkpoint checkpoint/best_stgcn_model.pth \\
-        --output     checkpoint/stgcn_int8.tflite \\
+        --checkpoint checkpoint/stgcn_v003/best_stgcn_model.pth \\
+        --output     auto \\
         --max-frames 64
 
 Requirements
@@ -43,9 +43,12 @@ import argparse
 import os
 import sys
 import tempfile
+from pathlib import Path
 
 import numpy as np
 import torch
+
+from src.utils.versioning import make_unique_file_path, resolve_checkpoint_path
 
 # ---------------------------------------------------------------------------
 # Deployment hyperparameters
@@ -167,6 +170,14 @@ def convert_to_tflite_int8(
         output_path     : destination path for the .tflite file
         max_frames      : temporal window for on-device inference (default 64)
     """
+    checkpoint_path = str(resolve_checkpoint_path(checkpoint_path, prefix="stgcn"))
+
+    # By default, export the mobile model beside the selected checkpoint.
+    # If a file already exists, append _v02, _v03, ... instead of overwriting.
+    if str(output_path).strip().lower() in {"", "auto", "latest"}:
+        output_path = Path(checkpoint_path).parent / "stgcn_int8.tflite"
+    output_path = str(make_unique_file_path(output_path))
+
     _check_imports()
     import litert_torch
     from ai_edge_quantizer import quantizer, recipe
@@ -298,13 +309,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--checkpoint",
-        default="checkpoint/best_stgcn_model.pth",
-        help="Path to trained PyTorch checkpoint (default: checkpoint/best_stgcn_model.pth)",
+        default="latest",
+        help="Path to trained PyTorch checkpoint, or latest for newest versioned run",
     )
     parser.add_argument(
         "--output",
-        default="checkpoint/stgcn_int8.tflite",
-        help="Destination path for the .tflite file (default: checkpoint/stgcn_int8.tflite)",
+        default="auto",
+        help="Destination path for the .tflite file, or auto to save beside the checkpoint without overwriting",
     )
     parser.add_argument(
         "--max-frames",

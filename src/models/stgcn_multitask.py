@@ -24,6 +24,9 @@ Density head: lightweight 1-D dilated TCN (5 layers, dilations 1/2/4/8/1)
   - Output: sigmoid ∈ [0,1] = normalized peak probability
 
 Classification head: 2-layer MLP with LayerNorm+GELU.
+
+This revision lowers head dropout slightly so the small 700-sample dataset keeps
+stronger class-discriminative features while still regularizing overfitting.
 """
 
 import torch
@@ -166,11 +169,11 @@ class CoreSetSTGCN_MultiTask(nn.Module):
 
         self.head_classification = ClassificationHead(
             in_features=final_ch, num_classes=num_classes,
-            mid_features=128, dropout=0.5
+            mid_features=128, dropout=0.35
         )
         self.head_density = DilatedTCNDensityHead(
             in_channels=final_ch, d=64,
-            kernel_size=3, max_frames=max_frames, dropout=0.1
+            kernel_size=3, max_frames=max_frames, dropout=0.08
         )
 
         self._init_weights()
