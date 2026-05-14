@@ -230,7 +230,47 @@ class CoreSetGCN_Dataset(Dataset):
 
    # ------------------------------------------------------------------
    # __getitem__
-   # ------------------------------------------------------------------
+   # ------------------------------------------------------------------    
+   def _make_fallback_density(self, num_frames: int, rep_count: float) -> np.ndarray:
+        """
+        Builds a fallback density map for legacy .npz files that do not contain
+        a precomputed 'density' array.
+
+        This keeps old datasets compatible with ST-GCN training.
+        The density sum is normalized to the repetition count.
+        """
+        num_frames = int(num_frames)
+        rep_count = float(rep_count)
+
+        if num_frames <= 0:
+            return np.zeros(1, dtype=np.float32)
+
+        if rep_count <= 0:
+            return np.zeros(num_frames, dtype=np.float32)
+
+        density = np.zeros(num_frames, dtype=np.float32)
+
+        # Place soft Gaussian peaks evenly across the clip.
+        # This is only a fallback for older NPZ files.
+        peak_count = max(1, int(round(rep_count)))
+        peak_positions = np.linspace(
+            0,
+            num_frames - 1,
+            peak_count + 2,
+            dtype=np.float32
+        )[1:-1]
+
+        sigma = max(2.0, num_frames / max(peak_count * 6.0, 1.0))
+        frame_ids = np.arange(num_frames, dtype=np.float32)
+
+        for center in peak_positions:
+            density += np.exp(-0.5 * ((frame_ids - center) / sigma) ** 2)
+
+        density_sum = float(density.sum())
+        if density_sum > 0:
+            density = density / density_sum * rep_count
+
+        return density.astype(np.float32)
 
    def __getitem__(self, idx: int):
        """
