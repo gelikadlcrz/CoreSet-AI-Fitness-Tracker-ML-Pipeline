@@ -1,1 +1,1 @@
-checkpoint/stgcn_v002/best_stgcn_model.pth
+checkpoint/stgcn_v005/final_stgcn_model.pth
