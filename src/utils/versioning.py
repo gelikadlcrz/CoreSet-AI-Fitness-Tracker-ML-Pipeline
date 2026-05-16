@@ -1,41 +1,76 @@
 """
-versioning.py — small helpers for versioned ST-GCN training outputs.
+versioning.py — helpers for clean versioned ST-GCN outputs.
 
-The training script writes each completed run to its own folder, for example:
-    checkpoint/stgcn_v001/
-    checkpoint/stgcn_v002/
+Expected checkpoint structure:
 
-This prevents a new training run from overwriting a previous trained model.
-Evaluation/export scripts can pass "latest" to automatically use the newest
-saved checkpoint.
+    checkpoint/
+      latest_stgcn_checkpoint.txt
+      latest_stgcn_run.txt
+
+      stgcn_v001/
+        final_stgcn_model.pth
+        training_history.csv
+        config_snapshot.yaml
+        run_metadata.json
+
+      stgcn_v002/
+        final_stgcn_model.pth
+        training_history.csv
+        config_snapshot.yaml
+        run_metadata.json
+
+Rules:
+- Each training run gets its own version folder.
+- Each version folder contains only one .pth model file.
+- "latest" resolves only to final_stgcn_model.pth.
 """
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Iterable, Optional
+from typing import Iterable
 
 
 _VERSION_RE_TEMPLATE = r"^{prefix}_v(\d+)$"
+FINAL_MODEL_NAME = "final_stgcn_model.pth"
 
 
-def create_versioned_run_dir(checkpoint_root: str | Path, prefix: str = "stgcn") -> Path:
-    """Create and return the next run directory, e.g. checkpoint/stgcn_v003."""
+def create_versioned_run_dir(
+    checkpoint_root: str | Path,
+    prefix: str = "stgcn",
+) -> Path:
+    """
+    Create and return the next versioned run directory.
+
+    Example:
+        checkpoint/stgcn_v001
+        checkpoint/stgcn_v002
+        checkpoint/stgcn_v003
+    """
     root = Path(checkpoint_root)
     root.mkdir(parents=True, exist_ok=True)
 
-    pattern = re.compile(_VERSION_RE_TEMPLATE.format(prefix=re.escape(prefix)))
-    existing_versions = []
-    for child in root.iterdir():
-        if child.is_dir():
-            match = pattern.match(child.name)
-            if match:
-                existing_versions.append(int(match.group(1)))
+    pattern = re.compile(
+        _VERSION_RE_TEMPLATE.format(prefix=re.escape(prefix))
+    )
 
-    next_version = (max(existing_versions) + 1) if existing_versions else 1
+    existing_versions: list[int] = []
+
+    for child in root.iterdir():
+        if not child.is_dir():
+            continue
+
+        match = pattern.match(child.name)
+
+        if match:
+            existing_versions.append(int(match.group(1)))
+
+    next_version = max(existing_versions, default=0) + 1
+
     while True:
         run_dir = root / f"{prefix}_v{next_version:03d}"
+
         try:
             run_dir.mkdir(parents=False, exist_ok=False)
             return run_dir
@@ -48,11 +83,23 @@ def write_latest_checkpoint_pointer(
     checkpoint_path: str | Path,
     prefix: str = "stgcn",
 ) -> Path:
-    """Write a tiny text pointer to the newest checkpoint path."""
+    """
+    Write a pointer file to the latest final checkpoint.
+
+    Example pointer content:
+        checkpoint/stgcn_v002/final_stgcn_model.pth
+    """
     root = Path(checkpoint_root)
     root.mkdir(parents=True, exist_ok=True)
+
+    checkpoint_path = Path(checkpoint_path)
+
     pointer = root / f"latest_{prefix}_checkpoint.txt"
-    pointer.write_text(str(Path(checkpoint_path).as_posix()), encoding="utf-8")
+    pointer.write_text(
+        checkpoint_path.as_posix(),
+        encoding="utf-8",
+    )
+
     return pointer
 
 
@@ -61,16 +108,75 @@ def write_latest_run_pointer(
     run_dir: str | Path,
     prefix: str = "stgcn",
 ) -> Path:
-    """Write a tiny text pointer to the newest run folder."""
+    """
+    Write a pointer file to the latest versioned run folder.
+
+    Example pointer content:
+        checkpoint/stgcn_v002
+    """
     root = Path(checkpoint_root)
     root.mkdir(parents=True, exist_ok=True)
+
+    run_dir = Path(run_dir)
+
     pointer = root / f"latest_{prefix}_run.txt"
-    pointer.write_text(str(Path(run_dir).as_posix()), encoding="utf-8")
+    pointer.write_text(
+        run_dir.as_posix(),
+        encoding="utf-8",
+    )
+
     return pointer
 
 
 def _existing(paths: Iterable[Path]) -> list[Path]:
     return [p for p in paths if p.exists() and p.is_file()]
+
+
+def _version_number_from_path(path: Path, prefix: str = "stgcn") -> int:
+    """
+    Extract version number from:
+        checkpoint/stgcn_v###/final_stgcn_model.pth
+    """
+    pattern = re.compile(
+        _VERSION_RE_TEMPLATE.format(prefix=re.escape(prefix))
+    )
+
+    match = pattern.match(path.parent.name)
+
+    if not match:
+        return -1
+
+    return int(match.group(1))
+
+
+def _is_final_model_path(path: Path) -> bool:
+    return path.name == FINAL_MODEL_NAME
+
+
+def _resolve_pointer_path(pointer_text: str, checkpoint_root: Path) -> Path | None:
+    """
+    Resolve a path stored in latest_stgcn_checkpoint.txt.
+
+    Supports:
+        checkpoint/stgcn_v001/final_stgcn_model.pth
+        stgcn_v001/final_stgcn_model.pth
+    """
+    raw = pointer_text.strip()
+
+    if not raw:
+        return None
+
+    candidate = Path(raw)
+
+    if candidate.exists():
+        return candidate
+
+    candidate_from_root = checkpoint_root / candidate
+
+    if candidate_from_root.exists():
+        return candidate_from_root
+
+    return None
 
 
 def resolve_checkpoint_path(
@@ -79,57 +185,95 @@ def resolve_checkpoint_path(
     prefix: str = "stgcn",
 ) -> Path:
     """
-    Resolve a checkpoint path.
+    Resolve which checkpoint to evaluate/export.
 
     Accepted forms:
-      - "latest" or "auto": use the newest versioned checkpoint.
-      - a direct .pth path: use it if it exists.
-      - the older default checkpoint/best_stgcn_model.pth: use it if present,
-        otherwise fall back to the newest versioned checkpoint.
+        latest
+        auto
+        checkpoint/stgcn_v001/final_stgcn_model.pth
+
+    Automatic resolution only uses final_stgcn_model.pth.
+
+    It does not fall back to old messy checkpoint names like:
+        best_stgcn_model.pth
+        best_stgcn_by_accuracy.pth
+        best_stgcn_by_counting.pth
+        score_epoch_*.pth
+        accuracy_epoch_*.pth
+        counting_epoch_*.pth
     """
     root = Path(checkpoint_root)
     raw = str(checkpoint_path).strip() if checkpoint_path is not None else "latest"
-    requested = Path(raw)
 
-    if raw.lower() not in {"", "latest", "auto"} and requested.exists():
-        return requested
+    if raw.lower() not in {"", "latest", "auto"}:
+        requested = Path(raw)
 
-    # If the user gave a specific missing path, fail clearly.  The only
-    # exception is the legacy default, which can safely fall back to latest.
-    legacy_default = requested.as_posix().replace("\\", "/") == f"{checkpoint_root}/best_stgcn_model.pth"
-    if raw.lower() not in {"", "latest", "auto"} and not legacy_default:
-        raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
+        if requested.exists() and requested.is_file():
+            return requested
+
+        raise FileNotFoundError(
+            f"Checkpoint not found: {checkpoint_path}"
+        )
 
     pointer = root / f"latest_{prefix}_checkpoint.txt"
+
     if pointer.exists():
-        candidate = Path(pointer.read_text(encoding="utf-8").strip())
-        if candidate.exists():
-            return candidate
+        pointer_candidate = _resolve_pointer_path(
+            pointer.read_text(encoding="utf-8"),
+            root,
+        )
 
-    candidates = []
-    candidates.extend(root.glob(f"{prefix}_v*/best_{prefix}_model.pth"))
-    candidates.extend(root.glob(f"{prefix}_v*/best_stgcn_model.pth"))
-    candidates.extend(root.glob(f"{prefix}_v*/epoch_*.pth"))
-    candidates.extend([root / "best_stgcn_model.pth"])
+        if (
+            pointer_candidate is not None
+            and pointer_candidate.exists()
+            and pointer_candidate.is_file()
+            and _is_final_model_path(pointer_candidate)
+        ):
+            return pointer_candidate
 
-    existing = _existing(candidates)
-    if existing:
-        return max(existing, key=lambda p: p.stat().st_mtime)
+    candidates = _existing(
+        root.glob(f"{prefix}_v*/{FINAL_MODEL_NAME}")
+    )
+
+    if candidates:
+        candidates.sort(
+            key=lambda p: (
+                _version_number_from_path(p, prefix),
+                p.stat().st_mtime,
+            ),
+            reverse=True,
+        )
+
+        return candidates[0]
 
     raise FileNotFoundError(
-        f"No {prefix.upper()} checkpoint found under '{root}'. "
-        f"Train the model first or pass --checkpoint path/to/model.pth."
+        f"No final {prefix.upper()} checkpoint found under '{root}'. "
+        f"Train the model first. Expected file pattern: "
+        f"{root.as_posix()}/{prefix}_v###/{FINAL_MODEL_NAME}"
     )
 
 
 def make_unique_file_path(path: str | Path) -> Path:
-    """Return a non-existing file path by appending _v02, _v03, ... when needed."""
+    """
+    Return a non-existing file path by appending _v02, _v03, etc.
+
+    Used for exported ONNX/TFLite files only.
+    Training checkpoints should remain final_stgcn_model.pth inside their
+    own version folder.
+    """
     path = Path(path)
+
     if not path.exists():
         return path
+
     counter = 2
+
     while True:
-        candidate = path.with_name(f"{path.stem}_v{counter:02d}{path.suffix}")
+        candidate = path.with_name(
+            f"{path.stem}_v{counter:02d}{path.suffix}"
+        )
+
         if not candidate.exists():
             return candidate
+
         counter += 1
