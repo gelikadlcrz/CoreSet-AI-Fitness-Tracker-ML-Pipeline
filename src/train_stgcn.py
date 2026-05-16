@@ -125,13 +125,16 @@ def make_loader(
 # ---------------------------------------------------------------------------
 # Normalization
 # ---------------------------------------------------------------------------
-
 def compute_norm_stats_online(
     loader: DataLoader,
     device: torch.device,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     Compute channel-wise mean/std from the non-augmented training split only.
+
+    The statistics are computed on CPU to avoid MPS float64 limitations.
+    MPS does not support float64 tensors, so calling .double() on an MPS tensor
+    causes an error on Apple Silicon Macs.
     """
     n = 0
     sum_ = None
@@ -139,10 +142,9 @@ def compute_norm_stats_online(
 
     with torch.no_grad():
         for inputs, _, _ in loader:
-            inputs = inputs.to(
-                device,
-                non_blocking=(device.type == "cuda"),
-            ).double()
+            # Keep stats computation on CPU for compatibility with CPU/CUDA/MPS.
+            # DataLoader tensors are already on CPU before being moved.
+            inputs = inputs.float()
 
             _, channels, _, _, _ = inputs.shape
 
@@ -151,11 +153,12 @@ def compute_norm_stats_online(
                 .permute(0, 2, 3, 4, 1)
                 .contiguous()
                 .view(-1, channels)
+                .double()
             )
 
             if sum_ is None:
-                sum_ = torch.zeros(channels, dtype=torch.float64, device=device)
-                sumsq_ = torch.zeros(channels, dtype=torch.float64, device=device)
+                sum_ = torch.zeros(channels, dtype=torch.float64)
+                sumsq_ = torch.zeros(channels, dtype=torch.float64)
 
             sum_ += flat.sum(dim=0)
             sumsq_ += (flat * flat).sum(dim=0)
@@ -168,10 +171,13 @@ def compute_norm_stats_online(
     var = (sumsq_ / n - mean * mean).clamp(min=1e-12)
     std = var.sqrt().clamp(min=1e-6)
 
+    # Return float32 tensors moved to the actual training device.
     return (
-        mean.float().view(1, -1, 1, 1, 1),
-        std.float().view(1, -1, 1, 1, 1),
+        mean.float().view(1, -1, 1, 1, 1).to(device),
+        std.float().view(1, -1, 1, 1, 1).to(device),
     )
+
+
 
 
 def normalize_density_gt(density_gt: torch.Tensor) -> torch.Tensor:
