@@ -1,1 +1,1 @@
-checkpoint/stgcn_v018
+checkpoint/stgcn_v002

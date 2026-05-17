@@ -1,0 +1,68 @@
+{
+  "checkpoint": "checkpoint\\stgcn_v001\\best_stgcn_model.pth",
+  "test_samples": 150,
+  "classification": {
+    "accuracy": 0.7266666666666667,
+    "macro_precision": 0.7261079228439343,
+    "macro_recall": 0.7413605834010472,
+    "macro_f1": 0.7258376620602478,
+    "macro_auc": 0.915377649755778,
+    "per_class": {
+      "squat": {
+        "precision": 0.6,
+        "recall": 0.4186046511627907,
+        "f1": 0.4931506849315068,
+        "support": 43
+      },
+      "push_up": {
+        "precision": 0.8292682926829268,
+        "recall": 0.8947368421052632,
+        "f1": 0.8607594936708861,
+        "support": 38
+      },
+      "bench_press": {
+        "precision": 0.6222222222222222,
+        "recall": 0.8235294117647058,
+        "f1": 0.7088607594936709,
+        "support": 34
+      },
+      "pull_up": {
+        "precision": 0.8529411764705882,
+        "recall": 0.8285714285714286,
+        "f1": 0.8405797101449275,
+        "support": 35
+      }
+    },
+    "confusion_matrix": [
+      [
+        18,
+        7,
+        14,
+        4
+      ],
+      [
+        3,
+        34,
+        1,
+        0
+      ],
+      [
+        5,
+        0,
+        28,
+        1
+      ],
+      [
+        4,
+        0,
+        2,
+        29
+      ]
+    ]
+  },
+  "counting": {
+    "normalized_mae": 0.5896984126984127,
+    "rmse": 2.719068467937748,
+    "obo_accuracy": 0.3333333333333333
+  }
+}

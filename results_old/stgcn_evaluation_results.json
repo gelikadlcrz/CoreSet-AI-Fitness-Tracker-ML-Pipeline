@@ -1,0 +1,68 @@
+{
+  "checkpoint": "checkpoint/best_stgcn_model.pth",
+  "test_samples": 150,
+  "classification": {
+    "accuracy": 0.46,
+    "macro_precision": 0.4068385122410546,
+    "macro_recall": 0.4477531036894562,
+    "macro_f1": 0.38842312625984976,
+    "macro_auc": 0.7870676696328972,
+    "per_class": {
+      "squat": {
+        "precision": 0.4745762711864407,
+        "recall": 0.6511627906976745,
+        "f1": 0.5490196078431373,
+        "support": 43
+      },
+      "push_up": {
+        "precision": 0.7777777777777778,
+        "recall": 0.3684210526315789,
+        "f1": 0.5,
+        "support": 38
+      },
+      "bench_press": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 34
+      },
+      "pull_up": {
+        "precision": 0.375,
+        "recall": 0.7714285714285715,
+        "f1": 0.5046728971962616,
+        "support": 35
+      }
+    },
+    "confusion_matrix": [
+      [
+        28,
+        4,
+        0,
+        11
+      ],
+      [
+        12,
+        14,
+        1,
+        11
+      ],
+      [
+        11,
+        0,
+        0,
+        23
+      ],
+      [
+        8,
+        0,
+        0,
+        27
+      ]
+    ]
+  },
+  "counting": {
+    "normalized_mae": 0.46155555555555555,
+    "rmse": 1.9748417658131499,
+    "obo_accuracy": 0.5533333333333333
+  }
+}

@@ -1,0 +1,35 @@
+=================================================================
+  CoreSet ST-GCN — Evaluation Report
+  Checkpoint : checkpoint\stgcn_v018\final_stgcn_model.pth
+=================================================================
+
+── Classification Metrics ──────────────────────────────────
+  Top-1 Accuracy   :  74.00%
+  Macro AUC        : 0.9200   (one-vs-rest, following RepNet / Dwibedi et al., 2020)
+  Macro Precision  : 0.7488
+  Macro Recall     : 0.7565
+  Macro F1-Score   : 0.7476   ← primary classification metric (Grandini et al., 2020)
+
+── Per-Class Breakdown ─────────────────────────────────────
+  Class            Prec    Rec     F1     N
+  ------------------------------------------
+  squat          0.6579  0.6098  0.6329     41
+  push_up        0.9375  0.8571  0.8955     35
+  bench_press    0.7250  0.6591  0.6905     44
+  pull_up        0.6750  0.9000  0.7714     30
+
+── Confusion Matrix ────────────────────────────────────────
+  Rows = Ground Truth   Cols = Predicted
+  Classes: ['squat', 'push_up', 'bench_press', 'pull_up']
+     25     2     8     6
+      2    30     1     2
+     10     0    29     5
+      1     0     2    27
+
+── Repetition Counting Metrics ─────────────────────────────
+  Peak Detection   : adaptive=True, ratio=0.2, floor=0.05, distance=18
+  Normalized MAE   : 0.0000   (L1, per RepCount benchmark — Hu et al., 2022)
+  RMSE             : 1.0066   (L2, flags catastrophic failures — Izadi et al., 2022)
+  OBO Accuracy     : 97.33%   (off-by-one tolerance — Hu et al., 2022)
+
+=================================================================

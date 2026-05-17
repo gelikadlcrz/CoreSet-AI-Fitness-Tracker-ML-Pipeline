@@ -1,0 +1,25 @@
+{
+  "run_dir": "checkpoint/stgcn_v002",
+  "best_checkpoint": "checkpoint/stgcn_v002/best_stgcn_model.pth",
+  "best_accuracy_checkpoint": "checkpoint/stgcn_v002/best_stgcn_by_accuracy.pth",
+  "best_counting_checkpoint": "checkpoint/stgcn_v002/best_stgcn_by_counting.pth",
+  "best_epoch_checkpoint": "checkpoint/stgcn_v002/score_epoch_012_score_0.7137_acc_0.7867_obo_0.5333_nmae_0.6991.pth",
+  "best_score": 0.7137095238095237,
+  "best_val_accuracy": 0.7866666666666666,
+  "best_val_obo": 0.5333333333333333,
+  "best_val_nmae": 0.6991428571428571,
+  "counting_postprocess": {
+    "adaptive": true,
+    "threshold_ratio": 0.2,
+    "threshold_floor": 0.05,
+    "min_distance": 18,
+    "prominence_ratio": 0.08,
+    "selection_metric": "max_obo_then_min_nmae"
+  },
+  "test_accuracy": 0.7266666666666667,
+  "test_obo": 0.6266666666666667,
+  "test_nmae": 0.488968253968254,
+  "test_rmse": 2.0330600909302543,
+  "history_csv": "checkpoint/stgcn_v002/training_history.csv",
+  "config_snapshot": "checkpoint/stgcn_v002/config_snapshot.yaml"
+}

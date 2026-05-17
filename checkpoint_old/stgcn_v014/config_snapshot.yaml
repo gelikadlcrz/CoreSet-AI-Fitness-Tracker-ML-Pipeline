@@ -1,0 +1,10 @@
+data_dir: data/final_data
+checkpoint_dir: checkpoint
+in_channels: 14
+num_classes: 4
+node_count: 33
+max_frames: 150
+batch_size: 32
+learning_rate: 0.001
+weight_decay: 0.0001
+epochs: 100

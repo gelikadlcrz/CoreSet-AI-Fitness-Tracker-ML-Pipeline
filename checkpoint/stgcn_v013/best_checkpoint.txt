@@ -1,1 +1,0 @@
-checkpoint/stgcn_v013/score_epoch_004_score_0.5787_acc_0.6467_obo_0.1933_nmae_0.0000.pth
