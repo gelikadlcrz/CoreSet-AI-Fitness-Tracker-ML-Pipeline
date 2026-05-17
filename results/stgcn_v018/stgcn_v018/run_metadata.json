@@ -1,0 +1,24 @@
+{
+  "run_dir": "checkpoint/stgcn_v018",
+  "final_checkpoint": "checkpoint/stgcn_v018/final_stgcn_model.pth",
+  "best_epoch": 99,
+  "best_score": 0.8013333144187927,
+  "best_val_accuracy": 0.7733333110809326,
+  "best_val_obo": 0.96,
+  "best_val_nmae": 0.0,
+  "best_val_rmse": 1.0360180178613367,
+  "counting_postprocess": {
+    "adaptive": true,
+    "threshold_ratio": 0.2,
+    "threshold_floor": 0.05,
+    "min_distance": 18,
+    "prominence_ratio": 0.03,
+    "selection_metric": "max_obo_then_min_nmae"
+  },
+  "test_accuracy": 0.7400000095367432,
+  "test_obo": 0.9733333333333334,
+  "test_nmae": 0.0,
+  "test_rmse": 1.0066445913694333,
+  "history_csv": "checkpoint/stgcn_v018/training_history.csv",
+  "config_snapshot": "checkpoint/stgcn_v018/config_snapshot.yaml"
+}
