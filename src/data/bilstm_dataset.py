@@ -32,7 +32,7 @@ class BiLSTMDataset(Dataset):
 
         self.samples: list = []
         for item in split_list:
-            pt_file = item.replace(".json", ".pt")
+            pt_file = item.replace(".npz", ".pt")
             class_name = os.path.dirname(pt_file)
             full_path = os.path.join(data_dir, pt_file)
 
